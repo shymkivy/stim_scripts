@@ -1,0 +1,84 @@
+mouse_4_23_19
+
+day 1 lick reward script
+
+purpose is to train the mouse to lick from port and associate the tone with the reward
+
+40.5ml start.
+
+20ms sol
+2000ms delay
+tone during reward
+
+started to lick right away
+
+at 300 sec made duration 5000 to make it harder
+
+end ~39.8ml
+
+-----------day 2
+54.2ml start
+
+running full vmmn with sound during the reward trial, so he learns to associate
+delay is 1000
+
+black screen, will change to gray
+
+20ms reward
+
+didn't save orientation data from vmmn script by accident
+
+take off at 680 sec in pt 2
+
+-----------day 3
+
+made sol 30, seems too much.took him off at 1700
+
+at 1500 was not licking, so I moved it closer, started licking again
+
+--------day 4
+
+fill water to 40 and take sol back down to 22
+start at 33.9mL
+
+first 100 sec was lost because lick did not record. restarted
+
+started part 2 and no licking so stopped..also 1mL was gone.. 22ms seems perfect
+
+
+-------day 5
+
+47.8ml start
+22ms sol
+
+saved only 2000, so continued in part 2
+
+otherwise great, looks like he has learned``   
+
+
+-----------day 6 
+
+sound off
+51.7ml start
+22ms sol
+
+looks good at start
+
+----day 7 
+
+45.7ml start
+22ms sol                
+started at 7, 3 hrs earlier than normal  
+
+
+---day8
+first day ran on microscope
+
+was 2 hrs late and was not good performance
+
+----------day9
+ imaging 
+
+set up port position in beginning, maybe good after 120 sec     
+
+only 2000 recorded..... fuck. he stocped drinking anyway after second run                                    
