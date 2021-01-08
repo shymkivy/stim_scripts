@@ -42,8 +42,12 @@ fprintf('Expected run duration: %.1fmin (%.fsec)\n',run_time/60,run_time);
 
 % mag = sqrt(angsy.^2 + angsx.^2);
 %%
+pwd2 = fileparts(which('vMMN2_YS.m')); %mfilename
+addpath([pwd2 '\functions']);
+save_path = [pwd2 '\..\..\stim_scripts_output\visual\'];
+
 temp_time = clock;
-file_name = sprintf('vMMN_%d_%d_%d_stim_data_%dh_%dm.mat',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('vMMN_driftG_%d_%d_%d_stim_data_%dh_%dm.mat',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 
 %% calculate how many deviants you will get
@@ -250,7 +254,7 @@ sca();
 
 %% save info
 fprintf('Saving...\n');
-save(['C:\Users\rylab_901c\Desktop\Yuriy_scripts\scripts_output\', file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
+save([save_path, file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
 fprintf('Done\n');
 
 %% analysis

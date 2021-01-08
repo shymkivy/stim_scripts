@@ -26,18 +26,13 @@ end
 
 
 %% save output path
-save_path = 'C:\Users\rylab_901c\Desktop\Yuriy_scripts\A1_freq_stim_output\';
-acquisition_file_name = 'asynch_tones';
+pwd2 = fileparts(which('audio_asynch_stim.m')); %mfilename
+addpath([pwd2 '\functions']);
+save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
 
-%% file name generation
-% add time info to saved file name
 temp_time = clock;
-save_note = '';
-time_stamp = ['_', num2str(temp_time(2)), '_', num2str(temp_time(3)), '_', num2str(temp_time(1)), '_', num2str(temp_time(4)), '_', num2str(temp_time(5))];
-
-acquisition_file_path = [save_path, acquisition_file_name,time_stamp];
-
-
+file_name = sprintf('asynch_tones_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+clear temp_time;
 
 %% crate random asynchronized stym positions
 % parameters
@@ -153,6 +148,6 @@ for n_stim = 1:numel(asynch_stim_dsp)
 end
 
 %% save data below
-save([acquisition_file_path, '_stim_data'], 'save_note','asynch_stim','asynch_stim_dsp', 'sig_dt', 'stim_onset_times', 'stim_volumes', 'freqs', 'synch_pause_time', 'start_freq', 'end_freq', 'freq_steps', 'total_speaker_volt','-v7.3');
+save([save_path, file_name, '.mat'],'asynch_stim','asynch_stim_dsp', 'sig_dt', 'stim_onset_times', 'stim_volumes', 'freqs', 'synch_pause_time', 'start_freq', 'end_freq', 'freq_steps', 'total_speaker_volt','-v7.3');
 
 %save 'Freqs', 

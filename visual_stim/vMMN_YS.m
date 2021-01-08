@@ -11,15 +11,15 @@ ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
 % ------ Paradigm sequence ------
 ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
-ops.paradigm_trial_num = [400, 300, 300];                   % how many trials for each paradigm
+ops.paradigm_trial_num = [400, 600, 600];                   % how many trials for each paradigm
 ops.paradigm_MMN_pattern = [0, 1, 1];                       % which patterns for MMN/flip (controls are ignored)
                                                             % 1= horz/vert; 2= 45deg;
 % ------ MMN params ------
 ops.initial_red_num = 20;                                   % how many redundants to start with
-ops.inter_paradigm_pause_time = 30;                         % how long to pause between paragigms
+ops.inter_paradigm_pause_time = 60;                         % how long to pause between paragigms
 ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1]; 
-
 % probability of deviants   % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
+
 % ------ Other ------
 ops.synch_pulse = 1;                                        % 1 Do you want to use led pulse for synchrinization
 % ------ Stim params ------
@@ -40,6 +40,10 @@ fprintf('Expected run duration: %.1fmin (%.fsec)\n',run_time/60,run_time);
 
 % mag = sqrt(angsy.^2 + angsx.^2);
 %%
+pwd2 = fileparts(which('vMMN2_YS.m')); %mfilename
+addpath([pwd2 '\functions']);
+save_path = [pwd2 '\..\..\stim_scripts_output\visual\'];
+
 temp_time = clock;
 file_name = sprintf('vMMN_%d_%d_%d_stim_data_%dh_%dm.mat',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
@@ -47,9 +51,9 @@ clear temp_time;
 %% calculate how many deviants you will get
 compute_probability_dev = 0;
 if compute_probability_dev
-    times = [];
     sec1 = 0;
     num_dev = 600;
+    times = [];
     probab2 = ops.MMN_probab(1);
     num_repeats = 100000;
     for ii = 1:num_repeats
@@ -73,22 +77,12 @@ if compute_probability_dev
     histogram(times, numel(unique(times)),'Normalization', 'probability');
 end
 
-
 %% initialize
 Screen('Preference', 'SkipSyncTests', 1);
 AssertOpenGL; % Make sure this is running on OpenGL Psychtoolbox:
 screenid = max(Screen('Screens')); % Choose screen with maximum id - the secondary display on a dual-display setup for display
 [win, rect] = Screen('OpenWindow',screenid, [255/2 255/2 255/2]); % rect is the coordinates of the screen
 ops.flipInterval = Screen('GetFlipInterval', win);
-
-
-session=daq.createSession('ni');
-session.addAnalogOutputChannel('Dev1','ao0','Voltage');
-session.addAnalogOutputChannel('Dev1','ao1','Voltage');
-session.IsContinuous = true;
-%session.Rate = 10000;
-session.outputSingleScan([0,0]);
-
 
 %% create stim
 for designstim=1
@@ -121,9 +115,17 @@ end
 Screen('FillRect', win, isi_color, rect);
 Screen('Flip',win);
 
-%%
-IF_pause_synch(10, session, ops.synch_pulse)
+%% initialize DAQ
+session=daq.createSession('ni');
+session.addAnalogOutputChannel('Dev1','ao0','Voltage');
+session.addAnalogOutputChannel('Dev1','ao1','Voltage');
+session.IsContinuous = true;
+%session.Rate = 10000;
+session.outputSingleScan([0,0]);
 
+%% Run trials
+
+IF_pause_synch(10, session, ops.synch_pulse);
 stim_times = cell(numel(ops.paradigm_sequence),1);
 stim_ang = cell(numel(ops.paradigm_sequence),1);
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
@@ -154,9 +156,6 @@ for parad_num = 1:numel(ops.paradigm_sequence)
     % run trials
     for trl=1:ops.paradigm_trial_num(parad_num)
         start_trial1 = GetSecs();
-        
-        
-        
         
         % compute trial info
         if cont_parad
@@ -227,7 +226,7 @@ sca();
 
 %% save info
 fprintf('Saving...\n');
-save(['C:\Users\rylab_901c\Desktop\Yuriy_scripts\scripts_output\', file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
+save([save_path, file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
 fprintf('Done\n');
 
 

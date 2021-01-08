@@ -34,8 +34,13 @@ disp(2*trials*(duration+isi+0.05) + 2*intertrial_pause + 4*5 + 60);
 circuit_file_name = 'sine_mod_play_YS.rcx';
 
 %% save output path
-save_path = 'C:\Users\rylab_901c\Desktop\Yuriy_scripts\A1_freq_stim_output\';
-acquisition_file_name = 'ammn';
+pwd2 = fileparts(which('audio_MMN_tones.m')); %mfilename
+addpath([pwd2 '\functions']);
+save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
+
+temp_time = clock;
+file_name = sprintf('aMMN_tones_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+clear temp_time;
 
 %% file name generation
 % add time info to saved file name
@@ -228,7 +233,7 @@ RP.Halt;
 toc
 
 %% saving stuff
-save([acquisition_file_path, '_stim_data'],'trials','duration', 'isi', 'modulation_amp', 'num_freqs', 'start_freq', 'increase_factor', 'initial_stim_adaptation', 'MMN_freq', 'intertrial_pause', 'synch_pause_time', 'stim_times', 'stim_types', 'synch_pulse_times');
+save([save_path, file_name, '.mat'],'trials','duration', 'isi', 'modulation_amp', 'num_freqs', 'start_freq', 'increase_factor', 'initial_stim_adaptation', 'MMN_freq', 'intertrial_pause', 'synch_pause_time', 'stim_times', 'stim_types', 'synch_pulse_times');
 
 disp('Done');
 

@@ -42,14 +42,14 @@ disp('Run estimate (sec):');
 disp(trials*(duration+isi+pretrial_LED_pulse*(pretrial_pulse_duration+pretrial_pulse_wait)) + 100);
 
 %% save output path (saves stuff)
-save_path = 'C:\Users\rylab_901c\Desktop\Yuriy_scripts\A1_freq_stim_output\';
+pwd2 = fileparts(which('audio_A1mapping_YS.m')); %mfilename
+save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
 acquisition_file_name = 'ac_mapping';
 
 %% file name generation
 % add time info to saved file name
 temp_time = clock;
 time_stamp = ['_', num2str(temp_time(2)), '_', num2str(temp_time(3)), '_', num2str(temp_time(1)), '_', num2str(temp_time(4)), '_', num2str(temp_time(5))];
-
 acquisition_file_path = [save_path, acquisition_file_name,time_stamp];
 %%
 % generate control frequencies

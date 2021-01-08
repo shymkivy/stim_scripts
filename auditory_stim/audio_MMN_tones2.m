@@ -1,4 +1,4 @@
-%2{% audio MMN tones script
+%% audio MMN tones script
 %
 %   last update: 1/22/20
 %
@@ -40,6 +40,10 @@ fprintf('Expected run duration: %.1fmin (%.fsec)\n',run_time/60,run_time);
 
 % mag = sqrt(angsy.^2 + angsx.^2);
 %%
+pwd2 = fileparts(which('audio_MMN_tones2.m')); %mfilename
+addpath([pwd2 '\functions']);
+save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
+
 temp_time = clock;
 file_name = sprintf('aMMN_tones_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
@@ -182,7 +186,7 @@ RP.Halt;
 
 %% save info
 fprintf('Saving...\n');
-save(['C:\Users\rylab_901c\Desktop\Yuriy_scripts\\A1_freq_stim_output\', file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
+save([save_path, file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
 fprintf('Done\n');
 
 %% functions
