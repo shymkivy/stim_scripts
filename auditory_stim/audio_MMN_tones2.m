@@ -43,11 +43,12 @@ fprintf('Expected run duration: %.1fmin (%.fsec)\n',run_time/60,run_time);
 pwd2 = fileparts(which('audio_MMN_tones2.m')); %mfilename
 addpath([pwd2 '\functions']);
 save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
+circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
+circuit_file_name = 'sine_mod_play_YS.rcx';
 
 temp_time = clock;
 file_name = sprintf('aMMN_tones_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
-
 %% compute stim types sequence
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
 stim_ang = cell(numel(ops.paradigm_sequence),1);
@@ -85,21 +86,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
 end
 
 %% initialize RZ6
-circuit_file_name = 'sine_mod_play_YS.rcx';
-% connect to RZ6
-RP=actxcontrol('RPco.x',[5 5 26 26]);
-RP.ConnectRZ6('GB',1)
-RP.Halt;
-RP.ClearCOF; % Clears all the buffers and circuits
-
-% loadCOF clears device memory buffers, while readCOF doesn't
-load_e=RP.LoadCOF(strcat('C:\Users\rylab_901c\Desktop\Yuriy_scripts\RPvdsEx_circuits\',circuit_file_name)); % Loads circuit
-
-% run check
-RP.Run;
-if ~all(bitget(RP.GetStatus,1:3))
-    disp('Error loading/running circuit');
-end
+RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
 RP.Halt;
 
 %% design stim

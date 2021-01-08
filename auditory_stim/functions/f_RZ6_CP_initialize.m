@@ -1,4 +1,4 @@
-function [RP, fs] = f_RZ6_CP_initialize(circuit_file_name)
+function [RP, fs] = f_RZ6_CP_initialize(circuit_file_path)
 
 %% Initialize Amplifier 
 
@@ -10,7 +10,7 @@ RP.ClearCOF; % Clears all the buffers and circuits
 
 % filePath - set this to wherever the examples are stored
 
-RP.LoadCOF(strcat('C:\Users\rylab_901c\Desktop\Yuriy_scripts\RPvdsEx_circuits\',circuit_file_name)); % Loads circuit
+RP.LoadCOF(circuit_file_path); % Loads circuit
 
 % run check
 RP.Run;

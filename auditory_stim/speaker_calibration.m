@@ -14,11 +14,12 @@ base_freq = 0.001;
 base_mod = 0.001;
 
 %% initialize RZ6
+circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 if pure_tones
-    [RP, fs] = f_RZ6_CP_initialize('pure_tone_play_acquire_YS.rcx');
+    [RP, fs] = f_RZ6_CP_initialize([circuit_path 'pure_tone_play_acquire_YS.rcx']);
     title1 = 'pure tones';
 else
-    [RP, fs] = f_RZ6_CP_initialize('sine_mod_play_acquire_YS.rcx');
+    [RP, fs] = f_RZ6_CP_initialize([circuit_path 'sine_mod_play_acquire_YS.rcx']);
     title1 = 'SAM tones';
 end
 
