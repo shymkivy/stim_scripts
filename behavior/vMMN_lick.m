@@ -31,7 +31,6 @@ params.trials = 650;    %650    % trials per pattern
 
 patterns_to_run = [1 2 3 4]; % choose from angsy_patterns below, order is shuffled
 
-
 inter_paradigm_pause_time = 20; %30% pause time between runs
 
 %% output file name generation
