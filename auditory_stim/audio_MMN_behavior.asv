@@ -82,8 +82,8 @@ for parad_num = 1:numel(ops.paradigm_sequence)
         elseif strcmpi(ops.paradigm_sequence{parad_num}, 'flip_mmn')
             curr_MMN_pattern = fliplr(ops.MMN_patterns(ops.paradigm_MMN_pattern(parad_num),:));
         end
-        for n_stim=1:ops.paradigm_trial_num(parad_num)
-            if n_stim <= ops.initial_red_num
+        for n_tr=1:ops.paradigm_trial_num(parad_num)
+            if n_tr <= ops.initial_red_num
                 ctxt = 1;
                 stdcounts = stdcounts + 1;
             else
@@ -95,8 +95,8 @@ for parad_num = 1:numel(ops.paradigm_sequence)
                     stdcounts=0;
                 end
             end
-            stim_ctx_stdcount{parad_num}(n_stim,:) = [ctxt, stdcounts];
-            stim_ang{parad_num}(n_stim) = curr_MMN_pattern(ctxt);
+            stim_ctx_stdcount{parad_num}(n_tr,:) = [ctxt, stdcounts];
+            stim_ang{parad_num}(n_tr) = curr_MMN_pattern(ctxt);
         end
     end
 end
@@ -104,15 +104,15 @@ end
 dev_idx = zeros(ops.num_bouts,1);
 
 dev_ctx = 0;
-for n_tr = 1:ops.num_trials
-    n_stim = 1;
+for n_bt = 1:ops.num_trials
+    n_tr = 1;
     while ~dev_ctx
-        curr_prob = ops.MMN_probab(n_stim);
+        curr_prob = ops.MMN_probab(n_tr);
         dev_ctx = (rand(1) < curr_prob);
         if dev_ctx
-            dev_idx(n_tr) = n_stim;
+            dev_idx(n_bt) = n_tr;
         else
-            n_stim = n_stim + 1;
+            n_tr = n_tr + 1;
         end
     end
     dev_ctx = 0;
@@ -138,22 +138,21 @@ RP.Run;
 RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 start_paradigm=now*1e5;%GetSecs();
 
-for n_tr = 1:ops.num_trials
-    start_trial1 = now*1e5;%GetSecs();
-    
-    num_stim = dev_idx(n_tr);
-    cont_st = 3;
-    dev_st = 5;
-    for n_stim = 1:num_stim
-
-        ang = stim_ang{parad_num}(n_stim);
+for n_bt = 1:ops.num_trials
+    num_trials = dev_idx(n_bt);
+    cont_tr = 3;
+    dev_tr = 5;
+    for n_tr = 1:num_trials
+        start_trial1 = now*1e5;%GetSecs();
+   
+        ang = stim_ang{parad_num}(n_tr);
         if cont_parad
             vis_volt = ang/ops.num_freqs*4;
         else
-            vis_volt = stim_ctx_stdcount{parad_num}(n_stim,1);
+            vis_volt = stim_ctx_stdcount{parad_num}(n_tr,1);
         end
         
-        waitbar(n_stim/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_stim, ang));
+        waitbar(n_tr/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_tr, ang));
         % pause for isi
         pause(ops.isi_time+rand(1)/20)
 
@@ -169,7 +168,7 @@ for n_tr = 1:ops.num_trials
         
         
         % record
-        stim_times{parad_num}(n_stim) = start_stim-start_paradigm;
+        stim_times{parad_num}(n_tr) = start_stim-start_paradigm;
         %fprintf('; Angle %d\n', ang);
     end
         
@@ -192,17 +191,17 @@ for parad_num = 1:numel(ops.paradigm_sequence)
     stim_times{parad_num} = zeros(ops.paradigm_trial_num(parad_num),1);
     
     % run trials
-    for n_stim=1:ops.paradigm_trial_num(parad_num)
+    for n_tr=1:ops.paradigm_trial_num(parad_num)
         start_trial1 = now*1e5;%GetSecs();
    
-        ang = stim_ang{parad_num}(n_stim);
+        ang = stim_ang{parad_num}(n_tr);
         if cont_parad
             vis_volt = ang/ops.num_freqs*4;
         else
-            vis_volt = stim_ctx_stdcount{parad_num}(n_stim,1);
+            vis_volt = stim_ctx_stdcount{parad_num}(n_tr,1);
         end
         
-        waitbar(n_stim/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_stim, ang));
+        waitbar(n_tr/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_tr, ang));
         % pause for isi
         pause(ops.isi_time+rand(1)/20)
 
@@ -218,7 +217,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
         
         
         % record
-        stim_times{parad_num}(n_stim) = start_stim-start_paradigm;
+        stim_times{parad_num}(n_tr) = start_stim-start_paradigm;
         %fprintf('; Angle %d\n', ang);
     end
     
