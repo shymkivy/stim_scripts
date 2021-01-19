@@ -15,18 +15,16 @@ ops.num_trials = 400;
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
+ops.rand_time_pad = .05;
 
+%% MMN trial params
 ops.stim_range = [3 4 5 6 7];
-
-% ------ Paradigm sequence ------
-ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
-ops.paradigm_trial_num = [400, 600, 600];                   % how many trials for each paradigm
-ops.paradigm_MMN_pattern = [0,1, 1];                       % which patterns for MMN/flip (controls are ignored)
-                                                            % 1= horz/vert; 2= 45deg;
-% ------ MMN params ------
-ops.initial_red_num = 20;                                   % how many redundants to start with
-ops.inter_paradigm_pause_time = 60;                         % how long to pause between paragigms
+ops.red_pre_trial = 3;
+ops.red_post_trial = 3;
 ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1]; 
+
+%%
+ops.intertrial_delay = 2;
 
 % probability of deviants   % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
 % ------ Other ------
@@ -34,9 +32,8 @@ ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 
 % ----- auditory stim params ------------
 ops.start_freq = 2000;
-ops.end_freq = 90000;
+% ops.end_freq = 90000;
 
-% ----- auditory tones stim params -------------
 ops.num_freqs = 10;
 ops.increase_factor = 1.5;
 ops.MMN_patterns = [3,6; 4,7; 3,8];
@@ -83,6 +80,7 @@ for n_tr = 1:ops.num_trials
     end
     dev_ctx = 0;
 end
+dev_idx = dev_idx + ops.red_pre_trial;
 
 % stim types
 mmn_red_dev_seq = zeros(ops.num_trials,2);
@@ -115,12 +113,16 @@ IF_pause_synch(10, session, ops.synch_pulse)
 stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
 trial_times = zeros(ops.num_trials,1);
-
+stim_times = cell(ops.num_trials,1);
 for n_tr = 1:ops.num_trials
     start_trial1 = now*1e5;%GetSecs();
-    trial_times = start_trial1 - start_paradigm;
+    num_stim = dev_idx(n_tr)+ops.red_post_trial;
     
-    num_stim = dev_idx(n_tr);
+    trial_times(n_tr) = start_trial1 - start_paradigm;
+    stim_times{n_tr} = zeros(num_stim,1);
+    
+    waitbar(n_tr/ops.num_trials, h, sprintf('Trial %d, red %d, dev %d', n_tr, mmn_red_dev_seq(n_tr,1), mmn_red_dev_seq(n_tr,2)));
+    
     for n_stim = 1:num_stim
 
         if n_stim == dev_idx(n_tr)
@@ -130,9 +132,8 @@ for n_tr = 1:ops.num_trials
         end
         volt =  stim_type/ops.num_freqs*4;
         
-        waitbar(n_stim/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_stim, stim_type));
         % pause for isi
-        pause(ops.isi_time+rand(1)/20)
+        pause(ops.isi_time+rand(1)*ops.rand_time_pad)
 
         % play
         start_stim = now*1e5;%GetSecs();
@@ -144,12 +145,13 @@ for n_tr = 1:ops.num_trials
         session.outputSingleScan([0,0]);
         session.outputSingleScan([0,0]);
         
-        
         % record
-        stim_times{parad_num}(n_stim) = start_stim-start_paradigm;
+        stim_times{n_tr}(n_stim) = start_stim-start_paradigm;
         %fprintf('; Angle %d\n', ang);
     end
-        
+    
+    pause(ops.intertrial_delay);
+    
 end
 close(h);
 
