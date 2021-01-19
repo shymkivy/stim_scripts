@@ -21,7 +21,8 @@ ops.rand_time_pad = .05;
 ops.stim_range = [3 4 5 6 7];
 ops.red_pre_trial = 3;
 ops.red_post_trial = 3;
-ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1]; 
+ops.red_lim = 20; % min lim is 5;
+ops.MMN_probab=[0.1*ones(1,max(ops.red_lim-4,1)) .2 .25 .5 1]; 
 
 %%
 ops.intertrial_delay = 2;
