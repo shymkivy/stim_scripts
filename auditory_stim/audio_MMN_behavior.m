@@ -111,7 +111,6 @@ RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 start_paradigm=now*1e5;%GetSecs();
 
 IF_pause_synch(10, session, ops.synch_pulse)
-stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
 trial_times = zeros(ops.num_trials,1);
 stim_times = cell(ops.num_trials,1);
