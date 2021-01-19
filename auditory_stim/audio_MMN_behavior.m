@@ -16,6 +16,8 @@ ops.num_trials = 400;
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
 
+ops.stim_range = [3 4 5 6 7];
+
 % ------ Paradigm sequence ------
 ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
 ops.paradigm_trial_num = [400, 600, 600];                   % how many trials for each paradigm
@@ -61,48 +63,12 @@ clear temp_time;
 % generate control frequencies
 control_carrier_freq = zeros(1, ops.num_freqs);
 control_carrier_freq(1) = ops.start_freq;
-for ii = 2:ops.num_freqs
-    control_carrier_freq(ii) = control_carrier_freq(ii-1) * ops.increase_factor;
+for n_stim = 2:ops.num_freqs
+    control_carrier_freq(n_stim) = control_carrier_freq(n_stim-1) * ops.increase_factor;
 end
 
 %% design stim types sequence
-stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
-stim_ang = cell(numel(ops.paradigm_sequence),1);
-for parad_num = 1:numel(ops.paradigm_sequence)
-    if strcmpi(ops.paradigm_sequence{parad_num}, 'control')
-        samp_seq = randperm(ops.paradigm_trial_num(parad_num));
-        samp_pool = repmat(1:ops.num_freqs,1,ceil(ops.paradigm_trial_num(parad_num)/ops.num_freqs));    
-        stim_ang{parad_num} = samp_pool(samp_seq)';
-    else
-        stdcounts = 0;
-        stim_ang{parad_num} = zeros(ops.paradigm_trial_num(parad_num),1);
-        stim_ctx_stdcount{parad_num} = zeros(ops.paradigm_trial_num(parad_num),2);
-        if strcmpi(ops.paradigm_sequence{parad_num}, 'mmn')
-            curr_MMN_pattern = ops.MMN_patterns(ops.paradigm_MMN_pattern(parad_num),:);
-        elseif strcmpi(ops.paradigm_sequence{parad_num}, 'flip_mmn')
-            curr_MMN_pattern = fliplr(ops.MMN_patterns(ops.paradigm_MMN_pattern(parad_num),:));
-        end
-        for n_stim=1:ops.paradigm_trial_num(parad_num)
-            if n_stim <= ops.initial_red_num
-                ctxt = 1;
-                stdcounts = stdcounts + 1;
-            else
-                curr_prob = ops.MMN_probab(rem(stdcounts,numel(ops.MMN_probab))+1);
-                ctxt = (rand(1) < curr_prob) + 1;  % 1=red, 2=dev
-                if ctxt==1
-                    stdcounts=1+stdcounts;
-                else
-                    stdcounts=0;
-                end
-            end
-            stim_ctx_stdcount{parad_num}(n_stim,:) = [ctxt, stdcounts];
-            stim_ang{parad_num}(n_stim) = curr_MMN_pattern(ctxt);
-        end
-    end
-end
-
-dev_idx = zeros(ops.num_bouts,1);
-
+dev_idx = zeros(ops.num_trials,1);
 dev_ctx = 0;
 for n_tr = 1:ops.num_trials
     n_stim = 1;
@@ -118,8 +84,15 @@ for n_tr = 1:ops.num_trials
     dev_ctx = 0;
 end
 
-figure; histogram(dev_idx);
+% stim types
+mmn_red_dev_seq = zeros(ops.num_trials,2);
+for n_tr = 1:ops.num_trials
+    mmn_red_dev_seq(n_tr,:) = randsample(ops.stim_range, 2, 0);
+end
 
+% figure; histogram(dev_idx);
+% figure; histogram(mmn_red_dev_seq(:,1));
+% figure; histogram(mmn_red_dev_seq(:,2));
 
 %% initialize RZ6
 RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
@@ -138,79 +111,34 @@ RP.Run;
 RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 start_paradigm=now*1e5;%GetSecs();
 
-for n_tr = 1:ops.num_trials
-    start_trial1 = now*1e5;%GetSecs();
-    
-    num_stim = dev_idx(n_tr);
-    cont_st = 3;
-    dev_st = 5;
-    for n_stim = 1:num_stim
-
-        ang = stim_ang{parad_num}(n_stim);
-        if cont_parad
-            vis_volt = ang/ops.num_freqs*4;
-        else
-            vis_volt = stim_ctx_stdcount{parad_num}(n_stim,1);
-        end
-        
-        waitbar(n_stim/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_stim, ang));
-        % pause for isi
-        pause(ops.isi_time+rand(1)/20)
-
-        % play
-        start_stim = now*1e5;%GetSecs();
-        RP.SetTagVal('CarrierFreq', control_carrier_freq(ang));
-        session.outputSingleScan([vis_volt,0]);
-        session.outputSingleScan([vis_volt,0]);
-        pause(ops.stim_time);
-        RP.SetTagVal('CarrierFreq', ops.base_freq);
-        session.outputSingleScan([0,0]);
-        session.outputSingleScan([0,0]);
-        
-        
-        % record
-        stim_times{parad_num}(n_stim) = start_stim-start_paradigm;
-        %fprintf('; Angle %d\n', ang);
-    end
-        
-end
-
-
-
-IF_pause_synch(10, session, ops.synch_pulse);
+IF_pause_synch(10, session, ops.synch_pulse)
 stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
-for parad_num = 1:numel(ops.paradigm_sequence)
-    fprintf('Paradigm %d: %s, %d trials:\n',parad_num, ops.paradigm_sequence{parad_num}, ops.paradigm_trial_num(parad_num));
+trial_times = zeros(ops.num_trials,1);
+
+for n_tr = 1:ops.num_trials
+    start_trial1 = now*1e5;%GetSecs();
+    trial_times = start_trial1 - start_paradigm;
     
-    % check what paradigm
-    if strcmpi(ops.paradigm_sequence{parad_num}, 'control')
-        cont_parad = 1;
-    else
-        cont_parad = 0;
-    end
-    stim_times{parad_num} = zeros(ops.paradigm_trial_num(parad_num),1);
-    
-    % run trials
-    for n_stim=1:ops.paradigm_trial_num(parad_num)
-        start_trial1 = now*1e5;%GetSecs();
-   
-        ang = stim_ang{parad_num}(n_stim);
-        if cont_parad
-            vis_volt = ang/ops.num_freqs*4;
+    num_stim = dev_idx(n_tr);
+    for n_stim = 1:num_stim
+
+        if n_stim == dev_idx(n_tr)
+            stim_type = mmn_red_dev_seq(n_tr,2);
         else
-            vis_volt = stim_ctx_stdcount{parad_num}(n_stim,1);
+            stim_type = mmn_red_dev_seq(n_tr,1);
         end
+        volt =  stim_type/ops.num_freqs*4;
         
-        waitbar(n_stim/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_stim, ang));
+        waitbar(n_stim/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), n_stim, stim_type));
         % pause for isi
         pause(ops.isi_time+rand(1)/20)
 
         % play
         start_stim = now*1e5;%GetSecs();
-        RP.SetTagVal('CarrierFreq', control_carrier_freq(ang));
-        session.outputSingleScan([vis_volt,0]);
-        session.outputSingleScan([vis_volt,0]);
+        RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
+        session.outputSingleScan([volt,0]);
+        session.outputSingleScan([volt,0]);
         pause(ops.stim_time);
         RP.SetTagVal('CarrierFreq', ops.base_freq);
         session.outputSingleScan([0,0]);
@@ -221,11 +149,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
         stim_times{parad_num}(n_stim) = start_stim-start_paradigm;
         %fprintf('; Angle %d\n', ang);
     end
-    
-    if parad_num < numel(ops.paradigm_sequence)
-        IF_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse);
-    end
-    
+        
 end
 close(h);
 
