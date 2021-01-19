@@ -23,17 +23,16 @@
 
 ///////// Parameters //////////////////////
 
-bool run_exp = true;    // turn on or off exp
+bool run_exp = false;    // turn on or off exp
 
-int reward_sol_duration = 20;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
+int reward_sol_duration = 40;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
 
-int initial_trial_delay = 2000;
-int reward_window = 10000;
-int reward_delay = 5000;
-int findal_trial_delay = 2000;
+int initial_trial_delay = 1000;
+int trial_window = 10000;
+int reward_delay = 2000;           // time given for animal to drink reward water before resuming next trial
+int findal_trial_delay = 0;
 
 
-int drink_duration = 5000;    // time given for animal to drink reward water before resuming next trial
 int punish_timeout_duration = 2000;   // in ms
 
 ////// Reward cues
@@ -81,6 +80,7 @@ bool trial_ongoing = false;
 int matlab_data = 0;
 int experiment_started = 0;
 int trial_type = 0;   // 0 = no trials, 1 = redundant, 2 = deviant
+int trial_start;
 
 ///// SETUP ////////////////////////////////
 void setup()                   
@@ -115,23 +115,24 @@ void loop()
     if (run_exp == true)
     {
       // set light on and trial ready
-      digitalWrite(ledOut, HIGH)               
+      lick_state = LOW;
+      digitalWrite(ledOut, HIGH);
       while (lick_state == LOW)
       {
-        lick_state = digitalRead(lick_pin);     // check for licks to initiate experiment
+        lick_state = digitalRead(lick_pin);      // check for licks to initiate experiment
       }
-      lick_state == LOW                         // reset
-      digitalWrite(ledOut, LOW)                 // reset
+      digitalWrite(ledOut, LOW);                 // reset
 
       // delay before reward
-      delay(initial_trial_delay)
+      delay(initial_trial_delay);
       
       // start trial
       trial_start = millis();
       trial_ongoing = true;
+      lick_state == LOW;                         // reset
       while(trial_ongoing)
       {
-        if (millis() - trial_start)<reward_window
+        if ((millis() - trial_start)<trial_window)
         {
           lick_state = digitalRead(lick_pin);
           if (lick_state == HIGH) 
@@ -139,7 +140,7 @@ void loop()
               reward();
               lick_state = LOW;
               trial_ongoing = false;
-              delay(reward_delay)
+              delay(reward_delay);
           }
         }
         else
@@ -147,9 +148,7 @@ void loop()
           trial_ongoing = false;
         }
       }
-
-      delay(findal_trial_delay)
-      
+      delay(findal_trial_delay);
     }
 
 }  // end VOID LOOP()
@@ -160,7 +159,6 @@ void reward()
 {
     digitalWrite(reward_sol_pin, HIGH);    // open solenoid valve for a short time
     digitalWrite(reward_out_pin, HIGH);
-    digitalWrite(ledOut, HIGH)
     delay(reward_sol_duration);
     digitalWrite(reward_sol_pin, LOW);
     digitalWrite(reward_out_pin, LOW);
