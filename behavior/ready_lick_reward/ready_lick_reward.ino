@@ -23,14 +23,15 @@
 
 ///////// Parameters //////////////////////
 
-bool run_exp = false;    // turn on or off exp
+bool run_exp = 0;    // turn on or off exp
 
 int reward_sol_duration = 40;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
+int LED_intensity = 30;             // 0 - 255 
 
-int initial_trial_delay = 1000;
+int initial_trial_delay = 1000;       // wait after initial lick
 int trial_window = 10000;
-int reward_delay = 2000;           // time given for animal to drink reward water before resuming next trial
-int findal_trial_delay = 0;
+int reward_delay = 2000;              // time given for animal to drink reward water before resuming next trial
+int findal_trial_delay = 2000;        // time out after reward
 
 
 int punish_timeout_duration = 2000;   // in ms
@@ -45,22 +46,26 @@ int rewLEDDur = 1000;
 //////// Define pin numbers ////////////////
 
 // Lick pins
-int lick_pin = 13;         // pin 13 Right or 12 Left is also connected to right lick port
+int lick_control_pin = 13;         // pin 13 Right or 12 Left is also connected to right lick port
+
+// LED out (for reward cue)
+int led_control_pin = 11;       // pwm pin
 
 // defining solenoid pins
-int reward_sol_pin = 5;     //  6 Right or 5 Left //define pin for turing solenoid valve ON
+int pump_control_pin = 5;     //  6 Right or 5 Left //define pin for turing solenoid valve ON
 
 //Voltage recording pins for NI-DAQ
-int reward_out_pin = 8; 
-int punish_out_pin = 9;
+int led_report_pin = 8; 
+int reward_report_pin = 9; 
+int punish_report_pin = 10;
+
 
 // Speaker
-int speakerOut = 11;    // define PWM pin for speaker/tone output
+//int speakerOut = 11;    // define PWM pin for speaker/tone output
 int rewFreq = 8000;
 int startTime;
 
-// LED out (for reward cue)
-int ledOut = 12;
+
 
 
 ////////////// Serial communication
@@ -85,19 +90,21 @@ int trial_start;
 ///// SETUP ////////////////////////////////
 void setup()                   
 {
-    pinMode(lick_pin, INPUT);
+    pinMode(lick_control_pin, INPUT);
     
-    pinMode(reward_sol_pin, OUTPUT);  // sets digital pin for turing solenoid valve ON
+    pinMode(pump_control_pin, OUTPUT);  // sets digital pin for turing solenoid valve ON
     
-    pinMode(reward_out_pin, OUTPUT);
+    pinMode(led_report_pin, OUTPUT);
 
-    pinMode(ledOut, OUTPUT);
+    pinMode(reward_report_pin, OUTPUT);
+
+    pinMode(led_control_pin, OUTPUT);
     
 
     //tone1.begin(13);
     
   
-//    pinMode(punish_out_pin, OUTPUT); 
+//    pinMode(punish_report_pin, OUTPUT); 
 //
 //    Serial.begin(9600);    // initialize serial for output to Processing sketch
 //    
@@ -116,13 +123,15 @@ void loop()
     {
       // set light on and trial ready
       lick_state = LOW;
-      digitalWrite(ledOut, HIGH);
+      analogWrite(led_control_pin, LED_intensity);
+      //digitalWrite(led_control_pin, HIGH);
       while (lick_state == LOW)
       {
-        lick_state = digitalRead(lick_pin);      // check for licks to initiate experiment
+        lick_state = digitalRead(lick_control_pin);      // check for licks to initiate experiment
       }
-      digitalWrite(ledOut, LOW);                 // reset
-
+      analogWrite(led_control_pin, 0);
+      //digitalWrite(led_control_pin, LOW);                 // reset
+  
       // delay before reward
       delay(initial_trial_delay);
       
@@ -134,7 +143,7 @@ void loop()
       {
         if ((millis() - trial_start)<trial_window)
         {
-          lick_state = digitalRead(lick_pin);
+          lick_state = digitalRead(lick_control_pin);
           if (lick_state == HIGH) 
           {  
               reward();
@@ -157,27 +166,29 @@ void loop()
 // function for reward administration
 void reward()
 {
-    digitalWrite(reward_sol_pin, HIGH);    // open solenoid valve for a short time
-    digitalWrite(reward_out_pin, HIGH);
+    digitalWrite(pump_control_pin, HIGH);    // open solenoid valve for a short time
+    digitalWrite(reward_report_pin, HIGH);
+    analogWrite(led_control_pin, LED_intensity);
     delay(reward_sol_duration);
-    digitalWrite(reward_sol_pin, LOW);
-    digitalWrite(reward_out_pin, LOW);
+    digitalWrite(pump_control_pin, LOW);
+    digitalWrite(reward_report_pin, LOW);
+    analogWrite(led_control_pin, 0);
 }
 
-// function for punishment administration 
-void punish()
-{
-    startTime = millis();
-    digitalWrite(punish_out_pin, HIGH);
-    
-    while ((millis() - startTime) < punish_timeout_duration)
-    {
-        tone(speakerOut, random(500, 10000), 1);
-        delay(1);
-    }
-    
-    digitalWrite(punish_out_pin, LOW);
-
-// here include maybe a horrible tone
-
-}
+//// function for punishment administration 
+//void punish()
+//{
+//    startTime = millis();
+//    digitalWrite(punish_report_pin, HIGH);
+//    
+//    while ((millis() - startTime) < punish_timeout_duration)
+//    {
+//        tone(speakerOut, random(500, 10000), 1);
+//        delay(1);
+//    }
+//    
+//    digitalWrite(punish_report_pin, LOW);
+//
+//// here include maybe a horrible tone
+//
+//}
