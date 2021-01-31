@@ -72,7 +72,7 @@ RP.Halt;
 RP.ClearCOF; % Clears all the buffers and circuits
 
 % loadCOF clears device memory buffers, while readCOF doesn't
-load_e=RP.LoadCOF(strcat('C:\Users\rylab_901c\Desktop\Yuriy_scripts\RPvdsEx_circuits\',circuit_file_name)); % Loads circuit
+load_e=RP.LoadCOF(strcat('C:\Users\rylab_901c\Desktop\Yuriy_scripts\stim_scripts\RPvdsEx_circuits\',circuit_file_name)); % Loads circuit
 
 % run check
 RP.Run;
