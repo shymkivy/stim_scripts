@@ -23,7 +23,7 @@
 
 ///////// Parameters //////////////////////
 
-bool run_exp = false;    // turn on or off exp
+bool run_exp = 0;    // turn on or off exp
 
 int reward_sol_duration = 40;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
 
