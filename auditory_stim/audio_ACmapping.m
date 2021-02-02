@@ -4,43 +4,6 @@
 %
 
 %%
-clear;
-close all;
-
-pure_tone = 0;
-
-tic;
-if pure_tone
-    circuit_file_name = 'pure_tone_play_YS.rcx';
-else
-    circuit_file_name = 'sine_mod_play_YS.rcx';
-end
-
-%% Stim info
-trials = 800;
-duration = 0.5; % in sec
-isi = 2;
-modulation_amp = 4; % Volume (0 - 10 Volts)
-num_freqs = 20;
-start_freq = 2000; %kHz
-increase_factor = sqrt(1.5); % 
-
-%% Script parameters
-synch_pause_time = [10,1,10]; % [pause, synch_pulse, pause] in sec
-
-use_LED_as_lighsource = 1; % 
-% 0 LED will turn on for synch pulses only
-% 1 LED is mostly on and will turn off for synch pulses
-
-pretrial_LED_pulse = 0; % do you want to use LED pulse before every stim trial
-pretrial_pulse_duration = 0.1; % length of LED pulse
-pretrial_pulse_wait = 0.9; % how long to wait after LED
-
-
-%%
-disp('Run estimate (sec):');
-disp(trials*(duration+isi+pretrial_LED_pulse*(pretrial_pulse_duration+pretrial_pulse_wait)) + 100);
-
 %% save output path (saves stuff)
 pwd2 = fileparts(which('audio_ACmapping.m')); %mfilename
 addpath([pwd2 '\functions']);
