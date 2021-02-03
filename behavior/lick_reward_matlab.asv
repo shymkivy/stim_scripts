@@ -3,6 +3,10 @@ clear;
 
 % params
 
+pwd2 = fileparts(which('lick_reward_matlab.m'));
+
+
+
 paradigm_duration = 100;  %  sec
 post_reward_delay = 2;  % sec
 trial_cap = 500;
@@ -16,7 +20,7 @@ session.IsContinuous = true;
 %session.Rate = 10000;
 
 %% Initialize arduino
-arduino_port=serialport('COM4',9600);
+arduino_port=serialport('COM19',9600);
 
 
 %% run paradigm
@@ -26,26 +30,30 @@ start_paragm = now*1e5;
 
 reward_times = zeros(trial_cap ,1);
 num_licks = 0;
-while or((start_paragm - now*1e5)<paradigm_duration, num_lickstrial_cap)
+while and((now*1e5 - start_paragm)<paradigm_duration, num_licks<trial_cap)
     
     lick = 0;
     % reward available, wait for lick
     write(arduino_port, 1, 'uint8');
-    while ~lick
+    while and(~lick, (now*1e5 - start_paragm)<paradigm_duration)
         data_in = inputSingleScan(session);
         if data_in > lick_thresh
             lick = 1;
         end
     end
     
-    write(arduino_port, 3, 'uint8');
-    write(arduino_port, 2, 'uint8'); % turn off LED
-    num_licks = num_licks + 1;
-    reward_times(num_licks) = now*1e5 - start_paragm;
+    if lick
+        write(arduino_port, 2, 'uint8'); % turn off LED
+        write(arduino_port, 3, 'uint8');
+        
+        num_licks = num_licks + 1;
+        reward_times(num_licks) = now*1e5 - start_paragm;
+    end
     
     pause(post_reward_delay);
     
 end
+write(arduino_port, 2, 'uint8'); % turn off LED
 
 reward_times(reward_times == 0) = [];
 
@@ -55,3 +63,7 @@ trial_data.paradigm_duration = paradigm_duration;
 trial_data.post_reward_delay = post_reward_delay;
 trial_data.trial_cap = trial_cap;
 
+temp_time = clock;
+file_name = sprintf('vMMN_%d_%d_%d_stim_data_%dh_%dm.mat',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+sav
+save([pwd2 '\..\..\stim_scripts_output.mat'], 'trial_data');

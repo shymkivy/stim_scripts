@@ -10,7 +10,7 @@
 ///////// Parameters //////////////////////
 
 int sol_control_pin = 5;                //  6 Right or 5 Left //define pin for turing solenoid valve ON
-int reward_sol_duration = 40;           // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
+int reward_sol_duration = 25;           // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
 
 int led_control_pin = 11;               // LED out (for reward cue)
 int led_intensity = 30;                 // 0 - 255 
@@ -46,7 +46,9 @@ void loop()
         else if (matlab_data == 3)
         {
             digitalWrite(sol_control_pin, HIGH);
+            digitalWrite(sol_control_pin, HIGH);
             delay(reward_sol_duration);
+            digitalWrite(sol_control_pin, LOW);
             digitalWrite(sol_control_pin, LOW);
         }
     }

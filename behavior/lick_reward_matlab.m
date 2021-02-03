@@ -3,7 +3,11 @@ clear;
 
 % params
 
-paradigm_duration = 10;  %  sec
+fname = 'nm_lick_reward_day2';
+
+pwd2 = fileparts(which('lick_reward_matlab.m'));
+
+paradigm_duration = 1800;  %  sec
 post_reward_delay = 2;  % sec
 trial_cap = 500;
 
@@ -16,7 +20,7 @@ session.IsContinuous = true;
 %session.Rate = 10000;
 
 %% Initialize arduino
-arduino_port=serialport('COM4',9600);
+arduino_port=serialport('COM19',9600);
 
 
 %% run paradigm
@@ -39,8 +43,9 @@ while and((now*1e5 - start_paragm)<paradigm_duration, num_licks<trial_cap)
     end
     
     if lick
-        write(arduino_port, 3, 'uint8');
         write(arduino_port, 2, 'uint8'); % turn off LED
+        write(arduino_port, 3, 'uint8');
+        
         num_licks = num_licks + 1;
         reward_times(num_licks) = now*1e5 - start_paragm;
     end
@@ -58,3 +63,7 @@ trial_data.paradigm_duration = paradigm_duration;
 trial_data.post_reward_delay = post_reward_delay;
 trial_data.trial_cap = trial_cap;
 
+temp_time = clock;
+file_name = sprintf('%s_%d_%d_%d_%dh_%dm.mat',fname, temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+save_path = [pwd2 '\..\..\stim_scripts_output\' file_name];
+save(save_path, 'trial_data');

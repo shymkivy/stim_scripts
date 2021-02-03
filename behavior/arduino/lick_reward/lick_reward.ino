@@ -25,8 +25,8 @@
 
 bool run_exp = true;    // turn on or off exp
 
-int reward_sol_duration = 25;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
-int drink_duration = 1500;    // time given for animal to drink reward water before resuming next trial
+int reward_sol_duration = 500;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
+int drink_duration = 1000;    // time given for animal to drink reward water before resuming next trial
 int punish_timeout_duration = 2000;   // in ms
 
 ////// Reward cues
