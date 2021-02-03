@@ -1,4 +1,4 @@
-function acquireData_YS(channels, recording_length)
+function acquireData_YS(channels, recording_length, pwd2)
 
 
 global globalTime;
@@ -34,7 +34,7 @@ channel_names = {'Punishment';
 daq_ai_chan_map = containers.Map(channel_key,channel_names);
 
 % initialize 
-s.addAnalogInputChannel('Dev3',channels,'voltage');
+s.addAnalogInputChannel('Dev1',channels,'voltage');
 
 % make the data acquisition 'SingleEnded, to separate the '
 for nchan = 1:length(channels)
@@ -53,12 +53,10 @@ else
 end
 
 %% Create temporary files to write  data from DAQ as it is recording
-daq_data.time = fopen('C:\Users\rylab_901c\Desktop\Yuriy_scripts\behavior\NI_DAQ\temp_data\temp_time.csv', 'w');
+daq_data.time = fopen([pwd2 '\temp_data\temp_time.csv'], 'w');
 for ii = 1:numel(channels)
-    daq_data.voltage(ii) = fopen(['C:\Users\rylab_901c\Desktop\Yuriy_scripts\behavior\NI_DAQ\temp_data\temp_volt_data_', num2str(ii), '.csv'], 'w');
+    daq_data.voltage(ii) = fopen([pwd2 '\temp_data\temp_volt_data_', num2str(ii), '.csv'], 'w');
 end
-
-
 
 %% Plotting data
 
