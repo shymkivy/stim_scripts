@@ -14,7 +14,7 @@ int reward_sol_duration = 40;           // 20ms release 4ul drop.time (in ms) th
 
 int led_control_pin = 11;               // LED out (for reward cue)
 int led_intensity = 30;                 // 0 - 255 
-
+char matlab_data;
 
 ///// SETUP ////////////////////////////////
 void setup()                   
@@ -35,19 +35,19 @@ void loop()
     if(Serial.available())
     {
         matlab_data = Serial.read();
-        if (matlab_data == '1')
+        if (matlab_data == 1)
         {
             analogWrite(led_control_pin, led_intensity);
         }
-        else if (matlab_data == '2')
+        else if (matlab_data == 2)
         {
             analogWrite(led_control_pin, 0);
         }
-        else if (matlab_data == '3')
+        else if (matlab_data == 3)
         {
-            digitalWrite(reward_sol_pin, HIGH);
+            digitalWrite(sol_control_pin, HIGH);
             delay(reward_sol_duration);
-            digitalWrite(reward_sol_pin, LOW);
+            digitalWrite(sol_control_pin, LOW);
         }
     }
 
