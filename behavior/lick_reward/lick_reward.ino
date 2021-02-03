@@ -25,8 +25,8 @@
 
 bool run_exp = true;    // turn on or off exp
 
-int reward_sol_duration = 7000;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
-int drink_duration = 5000;    // time given for animal to drink reward water before resuming next trial
+int reward_sol_duration = 40;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
+int drink_duration = 1500;    // time given for animal to drink reward water before resuming next trial
 int punish_timeout_duration = 2000;   // in ms
 
 ////// Reward cues
@@ -34,7 +34,7 @@ int includeSoundRewardCue = 0;
 int rewToneDur = 100;
 
 int includeLEDRewardCue = 1;
-int rewLEDDur = 1000;
+int rewLEDDur = 50;
 
 //////// Define pin numbers ////////////////
 
@@ -45,8 +45,8 @@ int lick_pin = 13;         // pin 13 Right or 12 Left is also connected to right
 int reward_sol_pin = 5;     //  6 Right or 5 Left //define pin for turing solenoid valve ON
 
 //Voltage recording pins for NI-DAQ
-int reward_out_pin = 8; 
-int punish_out_pin = 9;
+int reward_out_pin = 9; 
+int punish_out_pin = 10;
 
 // Speaker
 int speakerOut = 11;    // define PWM pin for speaker/tone output
@@ -54,7 +54,7 @@ int rewFreq = 8000;
 int startTime;
 
 // LED out (for reward cue)
-int ledOut = 12;
+int ledOut = 11;
 
 
 ////////////// Serial communication
@@ -103,7 +103,7 @@ void setup()
 
 // logic - if mouse licks during reward stimulus, he gets a reward
 void loop()
-{           
+{     
     if (run_exp == true)
     {
       // check for licks during experiment

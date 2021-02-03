@@ -23,16 +23,15 @@
 
 ///////// Parameters //////////////////////
 
-bool run_exp = 0;    // turn on or off exp
+bool run_exp = 1;    // turn on or off exp
 
-int reward_sol_duration = 40;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
+int reward_sol_duration = 30;         // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
 int LED_intensity = 30;             // 0 - 255 
 
-int initial_trial_delay = 1000;       // wait after initial lick
-int trial_window = 10000;
-int reward_delay = 2000;              // time given for animal to drink reward water before resuming next trial
+int initial_trial_delay = 500;       // wait after initial lick
+int trial_window = 5000;
+int reward_delay = 1000;              // time given for animal to drink reward water before resuming next trial
 int findal_trial_delay = 2000;        // time out after reward
-
 
 int punish_timeout_duration = 2000;   // in ms
 
@@ -86,6 +85,7 @@ int matlab_data = 0;
 int experiment_started = 0;
 int trial_type = 0;   // 0 = no trials, 1 = redundant, 2 = deviant
 int trial_start;
+int now1;
 
 ///// SETUP ////////////////////////////////
 void setup()                   
@@ -124,12 +124,14 @@ void loop()
       // set light on and trial ready
       lick_state = LOW;
       analogWrite(led_control_pin, LED_intensity);
+      digitalWrite(led_report_pin, HIGH);
       //digitalWrite(led_control_pin, HIGH);
       while (lick_state == LOW)
       {
         lick_state = digitalRead(lick_control_pin);      // check for licks to initiate experiment
       }
       analogWrite(led_control_pin, 0);
+      digitalWrite(led_report_pin, LOW);
       //digitalWrite(led_control_pin, LOW);                 // reset
   
       // delay before reward
@@ -141,7 +143,8 @@ void loop()
       lick_state == LOW;                         // reset
       while(trial_ongoing)
       {
-        if ((millis() - trial_start)<trial_window)
+        now1 = millis();
+        if ((now1 - trial_start)<trial_window)
         {
           lick_state = digitalRead(lick_control_pin);
           if (lick_state == HIGH) 
@@ -167,12 +170,14 @@ void loop()
 void reward()
 {
     digitalWrite(pump_control_pin, HIGH);    // open solenoid valve for a short time
-    digitalWrite(reward_report_pin, HIGH);
     analogWrite(led_control_pin, LED_intensity);
+    digitalWrite(reward_report_pin, HIGH);
+    digitalWrite(led_report_pin, HIGH);
     delay(reward_sol_duration);
     digitalWrite(pump_control_pin, LOW);
+    analogWrite(led_control_pin, 0);  
+    digitalWrite(led_report_pin, LOW);
     digitalWrite(reward_report_pin, LOW);
-    analogWrite(led_control_pin, 0);
 }
 
 //// function for punishment administration 
