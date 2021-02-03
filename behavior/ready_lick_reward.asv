@@ -6,10 +6,9 @@ fname = 'nm_ready_lick_reward_day2';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.pre_trial_delay = 0;  % sec
-ops.reward_window = 2;
 ops.post_reward_delay = 2;  % sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
-ops.reward_flash = 1;
+
 %%
 pwd2 = fileparts(which('ready_lick_reward.m'));
 save_path = [pwd2 '\..\..\stim_scripts_output\behavior\' fname];
@@ -51,36 +50,21 @@ while and((now*1e5 - start_paragm)<ops.paradigm_duration, num_trials<ops.trial_c
             lick = 1;
         end
     end
-    write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick
-        lick = 0;
         pause(ops.pre_trial_delay);
-        start_trial = now*1e5;
-        while and(~lick, (now*1e5 - start_trial)<ops.reward_window)
-            data_in = inputSingleScan(session);
-            if data_in > lick_thresh
-                lick = 1;
-            end
-        end
         
-        if lick
-            if ops.reward_flash
-                write(arduino_port, 1, 'uint8'); % turn on LED
-            end
-            write(arduino_port, 3, 'uint8');
-            if ops.reward_flash
-                write(arduino_port, 2, 'uint8'); % turn off LED
-            end
-            
-            num_trials = num_trials + 1;
-            reward_times(num_trials) = now*1e5 - start_paragm;
-        end
+        write(arduino_port, 2, 'uint8'); % turn off LED
+        write(arduino_port, 3, 'uint8');
+        
+        num_trials = num_trials + 1;
+        reward_times(num_trials) = now*1e5 - start_paragm;
     end
     
     pause(ops.post_reward_delay);
     
 end
+write(arduino_port, 2, 'uint8'); % turn off LED
 
 
 pause(5);
