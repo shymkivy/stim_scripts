@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Goal is to transfer most control to matlab. Arduino will execute minimal commands
+//  Goal is to transfer most control to matlab. Arduino will execute following minimal commands
 //    1. LED on
 //    2. LED off
 //    3. Give water
@@ -13,7 +13,7 @@ int sol_control_pin = 5;                //  6 Right or 5 Left //define pin for t
 int reward_sol_duration = 40;           // 20ms release 4ul drop.time (in ms) that reward valve is open (80ms for 2p)
 
 int led_control_pin = 11;               // LED out (for reward cue)
-int LED_intensity = 30;                 // 0 - 255 
+int led_intensity = 30;                 // 0 - 255 
 
 
 ///// SETUP ////////////////////////////////
@@ -37,7 +37,7 @@ void loop()
         matlab_data = Serial.read();
         if (matlab_data == '1')
         {
-            analogWrite(led_control_pin, LED_intensity);
+            analogWrite(led_control_pin, led_intensity);
         }
         else if (matlab_data == '2')
         {

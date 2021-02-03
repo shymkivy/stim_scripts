@@ -1,3 +1,6 @@
+% this seems slow
+
+
 a = arduino('COM4', 'Uno');
 
 exp_running = 1;
