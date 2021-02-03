@@ -4,11 +4,14 @@ clear;
 %% params
 fname = 'nm_ready_lick_reward_day2';
 
-paradigm_duration = 1800;  %  sec
-post_reward_delay = 2;  % sec
-trial_cap = 500;            % 200 - 400 typical with 25sol duration
+ops.paradigm_duration = 1800;  %  sec
+ops.post_reward_delay = 2;  % sec
+ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
+%%
 pwd2 = fileparts(which('ready_lick_reward.m'));
+save_path = [pwd2 '\..\..\stim_scripts_output\behavior\' file_name];
+
 %% Initialize arduino
 arduino_port=serialport('COM19',9600);
 
@@ -35,19 +38,19 @@ pause(5);
 lick_thresh = 4;
 reward_times = zeros(trial_cap, 1);
 num_trials = 0;
-while and((now*1e5 - start_paragm)<paradigm_duration, num_trials<trial_cap)
+while and((now*1e5 - start_paragm)<ops.paradigm_duration, num_trials<ops.trial_cap)
     
-    num_trials = 0;
+    lick = 0;
     % reward available, wait for lick
     write(arduino_port, 1, 'uint8');
-    while and(~num_trials, (now*1e5 - start_paragm)<paradigm_duration)
+    while and(~lick, (now*1e5 - start_paragm)<ops.paradigm_duration)
         data_in = inputSingleScan(session);
         if data_in > lick_thresh
-            num_trials = 1;
+            lick = 1;
         end
     end
     
-    if num_trials
+    if lick
         write(arduino_port, 2, 'uint8'); % turn off LED
         write(arduino_port, 3, 'uint8');
         
@@ -68,16 +71,16 @@ pause(1);
 session.outputSingleScan([0,0]);
 pause(5);
 
+%% save data
 reward_times(reward_times == 0) = [];
 
 trial_data.reward_times = reward_times;
-trial_data.num_licks = num_trials;
-trial_data.paradigm_duration = paradigm_duration;
-trial_data.post_reward_delay = post_reward_delay;
-trial_data.trial_cap = trial_cap;
+trial_data.num_licks = num_trials;p;
 trial_data.end_time = end_time;
 
 temp_time = clock;
 file_name = sprintf('%s_%d_%d_%d_%dh_%dm.mat',fname, temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
-save_path = [pwd2 '\..\..\stim_scripts_output\' file_name];
-save(save_path, 'trial_data');
+if ~exist(save_path, 'dir')
+    mkdir(save_path);
+end
+save(save_path, 'trial_data', 'ops');

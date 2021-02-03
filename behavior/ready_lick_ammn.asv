@@ -128,24 +128,9 @@ while and((now*1e5 - start_paragm)<ops.paradigm_duration, n_trial<ops.trial_cap)
                 stim_type = mmn_red_dev_seq(n_trial,1);
             end
             volt =  stim_type/ops.num_freqs*4;
-            
-            % play
-            start_stim = now*1e5;%GetSecs();
-            RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
-            session.outputSingleScan([volt,0]);
-            session.outputSingleScan([volt,0]);
-            pause(ops.stim_time);
-            RP.SetTagVal('CarrierFreq', ops.base_freq);
-            session.outputSingleScan([0,0]);
-            session.outputSingleScan([0,0]);
-            
-            % pause for isi
-            pause(ops.isi_time+rand(1)*ops.rand_time_pad)
-            
-            stim_times{n_tr}(n_stim) = start_stim-start_paradigm;
-            
-            n_stim = n_stim  + 1;
         end
+    
+    
     
         write(arduino_port, 2, 'uint8'); % turn off LED
         write(arduino_port, 3, 'uint8');

@@ -171,7 +171,7 @@ fprintf('Done\n');
 
 %% functions
 
-function IF_pause_synch(pause_time, session, synch)
+function pulse_time = IF_pause_synch(pause_time, session, synch)
     
     LED_on = 3; %foltage. if diameter of light circle is 1mm, then use 1.5.
     %if .8mm, use 1.23. these give about 4mw/mm2. 1=1.59mw. 1.23=2.00mw 1.5=2.35mw. 2=3.17. 2.5=3.93. 3=4.67. 3.5=5.36 4=6.05
@@ -180,6 +180,7 @@ function IF_pause_synch(pause_time, session, synch)
     if synch
         pause((pause_time - 1)/2);
         session.outputSingleScan([0,LED_on]);
+        pulse_time = now*1e5;
         pause(1);
         session.outputSingleScan([0,0]);
         pause((pause_time - 1)/2);
