@@ -7,9 +7,11 @@ fname = 'nm_ready_lick_reward_day2';
 ops.paradigm_duration = 1800;  %  sec
 ops.pre_trial_delay = 0;  % sec
 ops.reward_window = 2;
-ops.post_reward_delay = 2;  % sec
+ops.failure_timeout = 2;
+ops.post_trial_delay = 2;  % sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
-ops.reward_flash = 1;
+ops.require_second_lick = 1;
+ops.reward_period_flash = 1;
 %%
 pwd2 = fileparts(which('ready_lick_reward.m'));
 save_path = [pwd2 '\..\..\stim_scripts_output\behavior\' fname];
@@ -38,9 +40,10 @@ pause(5);
 
 
 lick_thresh = 4;
+trial_start_times = zeros(ops.trial_cap, 1);
 reward_times = zeros(ops.trial_cap, 1);
-num_trials = 0;
-while and((now*1e5 - start_paragm)<ops.paradigm_duration, num_trials<ops.trial_cap)
+n_trial = 0;
+while and((now*1e5 - start_paragm)<ops.paradigm_duration, n_trial<ops.trial_cap)
     
     % trial available, wait for lick to start
     lick = 0;
@@ -54,10 +57,17 @@ while and((now*1e5 - start_paragm)<ops.paradigm_duration, num_trials<ops.trial_c
     write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick
-        lick = 0;
+        if ops.require_second_lick
+            lick = 0;
+        end
+        trial_start_times(n_trial) = now*1e5;
         pause(ops.pre_trial_delay);
-        start_trial = now*1e5;
-        while and(~lick, (now*1e5 - start_trial)<ops.reward_window)
+        if ops.reward_period_flash
+            write(arduino_port, 1, 'uint8'); % turn on LED
+            pause(.005);
+            write(arduino_port, 2, 'uint8'); % turn off LED
+        end
+        while and(~lick, (now*1e5 - trial_start_times(n_trial))<(ops.pre_trial_delay+ops.reward_window))
             data_in = inputSingleScan(session);
             if data_in > lick_thresh
                 lick = 1;
@@ -65,21 +75,14 @@ while and((now*1e5 - start_paragm)<ops.paradigm_duration, num_trials<ops.trial_c
         end
         
         if lick
-            if ops.reward_flash
-                write(arduino_port, 1, 'uint8'); % turn on LED
-            end
+            reward_times(n_trial) = now*1e5 - start_paragm;
             write(arduino_port, 3, 'uint8');
-            if ops.reward_flash
-                write(arduino_port, 2, 'uint8'); % turn off LED
-            end
-            
-            num_trials = num_trials + 1;
-            reward_times(num_trials) = now*1e5 - start_paragm;
+        else
+            pause(ops.failure_timeout);
         end
+        n_trial = n_trial + 1;
     end
-    
-    pause(ops.post_reward_delay);
-    
+    pause(ops.post_trial_delay);
 end
 
 
@@ -94,7 +97,7 @@ pause(5);
 reward_times(reward_times == 0) = [];
 
 trial_data.reward_times = reward_times;
-trial_data.num_licks = num_trials;p;
+trial_data.num_licks = n_trial;p;
 trial_data.end_time = end_time;
 
 temp_time = clock;
