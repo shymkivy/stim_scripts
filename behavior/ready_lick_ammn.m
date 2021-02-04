@@ -1,13 +1,18 @@
 % communicates with the "minimal" arduino script
 clear;
 
-% params
-
+%% params
 fname = 'nm_lick_reward_day2';
 
 ops.paradigm_duration = 1800;  %  sec
-ops.post_reward_delay = 2;  % sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
+
+ops.pre_trial_delay = 2;  % sec
+ops.reward_window = 2;
+ops.failure_timeout = 5;
+ops.post_trial_delay = 2;  % sec
+ops.require_second_lick = 1;
+ops.reward_period_flash = 1;
 
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
@@ -41,6 +46,7 @@ pwd2 = fileparts(which('ready_lick_ammn.m'));
 addpath([pwd2 '\..\auditory_stim\functions']);
 save_path = [pwd2 '\..\..\stim_scripts_output\behavior\' fname];
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
+circuit_file_name = 'sine_mod_play_YS.rcx';
 %% Initialize arduino
 arduino_port=serialport('COM19',9600);
 
@@ -91,34 +97,38 @@ for n_tr = 1:ops.trial_cap
 end
 
 %% run paradigm
+RP.Run;
+RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 pause(5);
 session.outputSingleScan([0,3]);
-start_paragm = now*1e5;
+start_paradigm = now*1e5;
 pause(1);
 session.outputSingleScan([0,0]);
 pause(5);
 
-
 n_trial = 1;
-trial_times = zeros(ops.num_trials,1);
-stim_times = cell(ops.num_trials,1);
-reward_times = zeros(trial_cap, 1);
-while and((now*1e5 - start_paragm)<ops.paradigm_duration, n_trial<ops.trial_cap)
+start_trial_times = zeros(ops.trial_cap,1);
+stim_times = cell(ops.trial_cap,1);
+reward_times = zeros(ops.trial_cap, 1);
+while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
     
     lick = 0;
     % reward available, wait for lick
     write(arduino_port, 1, 'uint8');
-    while and(~lick, (now*1e5 - start_paragm)<ops.paradigm_duration)
+    while and(~lick, (now*1e5 - start_paradigm)<ops.paradigm_duration)
         data_in = inputSingleScan(session);
-        if data_in > lick_thresh
+        if data_in > ops.lick_thresh
             lick = 1;
         end
     end
+    write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick
+        lick = 0;
         stim_finish = 0;
         num_stim = dev_idx(n_trial)+ops.red_post_trial;
+        stim_times{n_tr} = zeros(num_stim,1);
         n_stim = 1;
         % start stim
         while and(~stim_finish, n_stim<=num_stim)
@@ -150,7 +160,7 @@ while and((now*1e5 - start_paragm)<ops.paradigm_duration, n_trial<ops.trial_cap)
         write(arduino_port, 2, 'uint8'); % turn off LED
         write(arduino_port, 3, 'uint8');
         
-        reward_times(n_trial) = now*1e5 - start_paragm;
+        reward_times(n_trial) = now*1e5 - start_paradigm;
         n_trial = n_trial + 1;
     end
     
@@ -161,7 +171,7 @@ write(arduino_port, 2, 'uint8'); % turn off LED
 
 pause(5);
 session.outputSingleScan([0,3]);
-end_time = now*1e5 - start_paragm;
+end_time = now*1e5 - start_paradigm;
 pause(1);
 session.outputSingleScan([0,0]);
 pause(5);

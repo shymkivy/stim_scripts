@@ -32,7 +32,7 @@ ops.num_freqs = 10;
 ops.increase_factor = 1.5;
 ops.MMN_patterns = [3,6; 4,7; 3,8];
 ops.base_freq = 0.001; % baseline frequency
-ops.modulation_amp = 4 ;
+ops.modulation_amp = 4; % maybe use 2
 
 %% predicted run time
 run_time = (ops.stim_time+ops.isi_time+0.025)*(sum(ops.paradigm_trial_num)) + (numel(ops.paradigm_trial_num)-1)*ops.inter_paradigm_pause_time + 20 + 120;
