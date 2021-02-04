@@ -32,15 +32,17 @@ session.Channels(1).TerminalConfig = 'SingleEnded';
 session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
 session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
 session.IsContinuous = true;
-%session.Rate = 10000;
+session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
+session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+
 
 %% run paradigm
 
 pause(5);
-session.outputSingleScan([0,3]);
+session.outputSingleScan([0,3,0,0]);
 start_paradigm = now*1e5;
 pause(1);
-session.outputSingleScan([0,0]);
+session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 start_trial_times = zeros(ops.trial_cap, 1);
@@ -51,14 +53,14 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
     
     % trial available, wait for lick to start
     lick = 0;
-    session.outputSingleScan([0,2]); %write(arduino_port, 1, 'uint8');
+    session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8');
     while and(~lick, (now*1e5 - start_paradigm)<ops.paradigm_duration)
         data_in = inputSingleScan(session);
         if data_in > ops.lick_thresh
             lick = 1;
         end
     end
-    session.outputSingleScan([0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+    session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick
         n_trial = n_trial + 1;
@@ -69,9 +71,9 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
         start_trial_times(n_trial) = now*1e5 - start_paradigm;
         pause(ops.pre_trial_delay);
         if ops.reward_period_flash
-            session.outputSingleScan([0,2]); %write(arduino_port, 1, 'uint8'); % turn on LED
+            session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
             pause(.005);
-            session.outputSingleScan([0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+            session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
         end
         while and(~lick, (now*1e5 - start_trial)<(ops.pre_trial_delay+ops.reward_window))
             data_in = inputSingleScan(session);
@@ -83,9 +85,9 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
         if lick
             n_reward = n_reward + 1;
             reward_times(n_trial) = now*1e5 - start_paradigm;
-            session.outputSingleScan([5,0]); % write(arduino_port, 3, 'uint8');
+            session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
             pause(ops.water_dispense_duration);
-            session.outputSingleScan([0,0]);
+            session.outputSingleScan([0,0,0,0]);
         else
             pause(ops.failure_timeout);
         end
@@ -96,10 +98,10 @@ end
 
 
 pause(5);
-session.outputSingleScan([0,3]);
+session.outputSingleScan([0,3,0,0]);
 end_time = now*1e5 - start_paradigm;
 pause(1);
-session.outputSingleScan([0,0]);
+session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 %% save data
