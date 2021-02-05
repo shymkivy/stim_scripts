@@ -14,6 +14,10 @@ ops.post_trial_delay = 2;  % sec
 ops.require_second_lick = 1;
 ops.reward_period_flash = 1;
 
+ops.water_dispense_duration = 0.025;
+
+ops.lick_thresh = 4;
+
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
@@ -48,7 +52,7 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\' fname];
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 circuit_file_name = 'sine_mod_play_YS.rcx';
 %% Initialize arduino
-arduino_port=serialport('COM19',9600);
+%arduino_port=serialport('COM19',9600);
 
 %% initialize RZ6
 RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
@@ -61,8 +65,8 @@ session.Channels(1).Range = [-10 10];
 session.Channels(1).TerminalConfig = 'SingleEnded';
 session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
 session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
-session.IsContinuous = true;
-%session.Rate = 10000;
+session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
+session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 %% design stim
 % generate control frequencies
@@ -101,53 +105,73 @@ RP.Run;
 RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 pause(5);
-session.outputSingleScan([0,3]);
+session.outputSingleScan([0,3,0,0]);
 start_paradigm = now*1e5;
 pause(1);
-session.outputSingleScan([0,0]);
+session.outputSingleScan([0,0,0,0]);
 pause(5);
 
-n_trial = 1;
+
 start_trial_times = zeros(ops.trial_cap,1);
 stim_times = cell(ops.trial_cap,1);
 reward_times = zeros(ops.trial_cap, 1);
-while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
+n_trial = 0;
+n_reward = 0;
+while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_cap)
     
     lick = 0;
     % reward available, wait for lick
-    write(arduino_port, 1, 'uint8');
+    session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8');
     while and(~lick, (now*1e5 - start_paradigm)<ops.paradigm_duration)
         data_in = inputSingleScan(session);
         if data_in > ops.lick_thresh
             lick = 1;
         end
     end
-    write(arduino_port, 2, 'uint8'); % turn off LED
+    session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick
+        n_trial = n_trial + 1;
         lick = 0;
+        start_trial = now*1e5;
+        stim_times{n_tr} = zeros(num_stim,1);
         stim_finish = 0;
         num_stim = dev_idx(n_trial)+ops.red_post_trial;
-        stim_times{n_tr} = zeros(num_stim,1);
         n_stim = 1;
         % start stim
         while and(~stim_finish, n_stim<=num_stim)
             if n_stim == dev_idx(n_trial)
                 stim_type = mmn_red_dev_seq(n_trial,2);
+                dev_trial = 1;
             else
                 stim_type = mmn_red_dev_seq(n_trial,1);
+                dev_trial = 0;
             end
             volt =  stim_type/ops.num_freqs*4;
             
             % play
+            lick = 0;
+            error = 0;
             start_stim = now*1e5;%GetSecs();
             RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
-            session.outputSingleScan([volt,0]);
-            session.outputSingleScan([volt,0]);
-            pause(ops.stim_time);
+            session.outputSingleScan([volt,0,0,0]);
+            session.outputSingleScan([volt,0,0,0]);
+            while (now*1e5 - start_stim) < ops.stim_time
+                data_in = inputSingleScan(session);
+                if data_in > ops.lick_thresh
+                    lick = 1;
+                    if dev_trial
+                        session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
+                        pause(ops.water_dispense_duration);
+                        session.outputSingleScan([0,0,0,0]);
+                    else
+                        error = 1;
+                    end
+                end
+            end
             RP.SetTagVal('CarrierFreq', ops.base_freq);
-            session.outputSingleScan([0,0]);
-            session.outputSingleScan([0,0]);
+            session.outputSingleScan([0,0,0,0]);
+            session.outputSingleScan([0,0,0,0]);
             
             % pause for isi
             pause(ops.isi_time+rand(1)*ops.rand_time_pad)
@@ -157,8 +181,6 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_ca
             n_stim = n_stim  + 1;
         end
     
-        write(arduino_port, 2, 'uint8'); % turn off LED
-        write(arduino_port, 3, 'uint8');
         
         reward_times(n_trial) = now*1e5 - start_paradigm;
         n_trial = n_trial + 1;

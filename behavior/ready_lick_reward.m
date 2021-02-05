@@ -1,4 +1,9 @@
 % communicates with the "minimal.ino" arduino script
+% day 1, 2 lick reward
+%       require_second_lick = 0;
+% day 3 ready lick reward 
+%       pretrial delay = 1;
+%       post trial delay = 5
 clear;
 
 %% params
@@ -31,10 +36,8 @@ session.Channels(1).Range = [-10 10];
 session.Channels(1).TerminalConfig = 'SingleEnded';
 session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
 session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
-session.IsContinuous = true;
 session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
 session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
-
 
 %% run paradigm
 
