@@ -7,13 +7,13 @@
 clear;
 
 %% params
-fname = 're_ready_lick_reward_day4';
+fname = 'nm_ready_lick_reward_day4';
 
 ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.pre_trial_delay = 2;  % sec
-ops.pre_trial_delay_rand = 5;
+ops.pre_trial_delay_rand = 4;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
 ops.post_trial_delay = 5;  % sec
@@ -73,16 +73,19 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
             lick = 0;
         end
         start_trial = now*1e5;
-        time_trial_start(n_trial) = now*1e5 - start_paradigm;
-        pause(ops.pre_trial_delay+rand(ops.pre_trial_delay_rand));
+        time_trial_start(n_trial) = start_trial - start_paradigm;
+        
+        trial_delay = ops.pre_trial_delay+ops.pre_trial_delay_rand*rand(1);
+        pause(trial_delay);
         
         if ops.reward_period_flash
             session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
             pause(.005);
             session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
         end
-        time_reward_period_start(n_trial) = now*1e5 - start_paradigm;
-        while and(~lick, (now*1e5 - start_trial)<(ops.pre_trial_delay+ops.reward_window))
+        reward_period_start = now*1e5;
+        time_reward_period_start(n_trial) = reward_period_start - start_paradigm;
+        while and(~lick, (now*1e5 - reward_period_start)<(ops.reward_window))
             data_in = inputSingleScan(session);
             if data_in > ops.lick_thresh
                 lick = 1;
@@ -106,7 +109,7 @@ end
 
 pause(5);
 session.outputSingleScan([0,3,0,0]);
-end_time = now*1e5 - start_paradigm;
+time_paradigm_end = now*1e5 - start_paradigm;
 pause(1);
 session.outputSingleScan([0,0,0,0]);
 pause(5);
