@@ -112,15 +112,16 @@ session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 
-start_trial_times = zeros(ops.trial_cap,1);
-stim_times = cell(ops.trial_cap,1);
-reward_times = zeros(ops.trial_cap, 1);
+time_trial_start = zeros(ops.trial_cap, 1);
+time_reward_period_start = zeros(ops.trial_cap, 1);
+time_correct_lick = zeros(ops.trial_cap, 1);
+sime_stim = cell(ops.trial_cap,1);
 n_trial = 0;
 n_reward = 0;
 while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_cap)
     
+    % trial available, wait for lick to start
     lick = 0;
-    % reward available, wait for lick
     session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8');
     while and(~lick, (now*1e5 - start_paradigm)<ops.paradigm_duration)
         data_in = inputSingleScan(session);
@@ -134,7 +135,8 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_c
         n_trial = n_trial + 1;
         lick = 0;
         start_trial = now*1e5;
-        stim_times{n_tr} = zeros(num_stim,1);
+        time_trial_start(n_trial) = start_trial - start_paradigm;
+        sime_stim{n_tr} = zeros(num_stim,1);
         stim_finish = 0;
         num_stim = dev_idx(n_trial)+ops.red_post_trial;
         n_stim = 1;
@@ -176,7 +178,7 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_c
             % pause for isi
             pause(ops.isi_time+rand(1)*ops.rand_time_pad)
             
-            stim_times{n_tr}(n_stim) = start_stim-start_paradigm;
+            sime_stim{n_tr}(n_stim) = start_stim-start_paradigm;
             
             n_stim = n_stim  + 1;
         end
