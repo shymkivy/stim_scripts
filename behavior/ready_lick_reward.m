@@ -105,7 +105,7 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
     end
     pause(ops.post_trial_delay);
 end
-
+session.outputSingleScan([0,0,0,0]);
 
 pause(5);
 session.outputSingleScan([0,3,0,0]);
