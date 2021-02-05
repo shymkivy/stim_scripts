@@ -3,7 +3,11 @@
 %       require_second_lick = 0;
 % day 3 ready lick reward 
 %       pretrial delay = 1;
-%       post trial delay = 5
+%       posttrial delay = 5;
+% day 4 rlr
+%       pretrial delay = 2;
+%       pretrial rand delay = 4;
+%       posttrial delay = 5
 clear;
 
 %% params
@@ -20,7 +24,8 @@ ops.post_trial_delay = 5;  % sec
 ops.require_second_lick = 1;
 ops.reward_period_flash = 1;
 
-ops.water_dispense_duration = 0.025;
+ops.water_dispense_duration = 0.025; % or .2 for more trials  
+% .025 ~ 137 trials and .5g weight gain
 
 ops.lick_thresh = 4;
 %%

@@ -2,7 +2,7 @@
 clear;
 
 %% params
-fname = 'nm_lick_reward_day2';
+fname = 'nm_ready_lick_ammn_day5';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -115,7 +115,7 @@ pause(5);
 time_trial_start = zeros(ops.trial_cap, 1);
 time_reward_period_start = zeros(ops.trial_cap, 1);
 time_correct_lick = zeros(ops.trial_cap, 1);
-sime_stim = cell(ops.trial_cap,1);
+time_stim = cell(ops.trial_cap,1);
 n_trial = 0;
 n_reward = 0;
 while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_cap)
@@ -136,7 +136,7 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_c
         lick = 0;
         start_trial = now*1e5;
         time_trial_start(n_trial) = start_trial - start_paradigm;
-        sime_stim{n_tr} = zeros(num_stim,1);
+        time_stim{n_tr} = zeros(num_stim,1);
         stim_finish = 0;
         num_stim = dev_idx(n_trial)+ops.red_post_trial;
         n_stim = 1;
@@ -144,17 +144,25 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_c
         while and(~stim_finish, n_stim<=num_stim)
             if n_stim == dev_idx(n_trial)
                 stim_type = mmn_red_dev_seq(n_trial,2);
-                dev_trial = 1;
+                reward_trial = 1;
             else
                 stim_type = mmn_red_dev_seq(n_trial,1);
-                dev_trial = 0;
+                reward_trial = 0;
             end
             volt =  stim_type/ops.num_freqs*4;
             
             % play
             lick = 0;
-            error = 0;
             start_stim = now*1e5;%GetSecs();
+            if reward_trial
+                if ops.reward_period_flash
+                    session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
+                    pause(.005);
+                    session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+                end
+                start_reward_period = now*1e5;
+                time_reward_period_start(n_trial) = start_reward_period - start_paradigm;
+            end
             RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
             session.outputSingleScan([volt,0,0,0]);
             session.outputSingleScan([volt,0,0,0]);
@@ -162,12 +170,11 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_c
                 data_in = inputSingleScan(session);
                 if data_in > ops.lick_thresh
                     lick = 1;
-                    if dev_trial
+                    if (now*1e5 - start_reward_period) < ops.reward_window
+                        time_correct_lick(n_trial) = now*1e5 - start_paradigm;
                         session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
                         pause(ops.water_dispense_duration);
                         session.outputSingleScan([0,0,0,0]);
-                    else
-                        error = 1;
                     end
                 end
             end
@@ -178,13 +185,10 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_c
             % pause for isi
             pause(ops.isi_time+rand(1)*ops.rand_time_pad)
             
-            sime_stim{n_tr}(n_stim) = start_stim-start_paradigm;
+            time_stim{n_tr}(n_stim) = start_stim-start_paradigm;
             
             n_stim = n_stim  + 1;
         end
-    
-        
-        reward_times(n_trial) = now*1e5 - start_paradigm;
         n_trial = n_trial + 1;
     end
     
@@ -195,17 +199,18 @@ write(arduino_port, 2, 'uint8'); % turn off LED
 
 pause(5);
 session.outputSingleScan([0,3]);
-end_time = now*1e5 - start_paradigm;
+time_paradigm_end = now*1e5 - start_paradigm;
 pause(1);
 session.outputSingleScan([0,0]);
 pause(5);
 
 %% save data
-reward_times(reward_times == 0) = [];
-
-trial_data.reward_times = reward_times;
-trial_data.num_trials = n_trial-1;
-trial_data.end_time = end_time;
+trial_data.time_trial_start = time_trial_start;
+trial_data.time_reward_period_start = time_reward_period_start;
+trial_data.time_correct_lick = time_correct_lick;
+trial_data.time_paradigm_end = time_paradigm_end;
+trial_data.num_trials = n_trial;
+trial_data.num_rewards = n_reward;
 
 temp_time = clock;
 file_name = sprintf('%s_%d_%d_%d_%dh_%dm.mat',fname, temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
