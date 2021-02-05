@@ -7,12 +7,13 @@
 clear;
 
 %% params
-fname = 'nm_ready_lick_reward_day3';
+fname = 're_ready_lick_reward_day4';
 
-ops.paradigm_duration = 1800;  %  sec
+ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
-ops.pre_trial_delay = 1;  % sec
+ops.pre_trial_delay = 2;  % sec
+ops.pre_trial_delay_rand = 5;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
 ops.post_trial_delay = 5;  % sec
@@ -48,8 +49,9 @@ pause(1);
 session.outputSingleScan([0,0,0,0]);
 pause(5);
 
-start_trial_times = zeros(ops.trial_cap, 1);
-reward_times = zeros(ops.trial_cap, 1);
+time_trial_start = zeros(ops.trial_cap, 1);
+time_reward_period_start = zeros(ops.trial_cap, 1);
+time_correct_lick = zeros(ops.trial_cap, 1);
 n_trial = 0;
 n_reward = 0;
 while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_cap)
@@ -71,23 +73,25 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
             lick = 0;
         end
         start_trial = now*1e5;
-        start_trial_times(n_trial) = now*1e5 - start_paradigm;
-        pause(ops.pre_trial_delay);
+        time_trial_start(n_trial) = now*1e5 - start_paradigm;
+        pause(ops.pre_trial_delay+rand(ops.pre_trial_delay_rand));
+        
         if ops.reward_period_flash
             session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
             pause(.005);
             session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
         end
+        time_reward_period_start(n_trial) = now*1e5 - start_paradigm;
         while and(~lick, (now*1e5 - start_trial)<(ops.pre_trial_delay+ops.reward_window))
             data_in = inputSingleScan(session);
             if data_in > ops.lick_thresh
                 lick = 1;
+                time_correct_lick(n_trial) = now*1e5 - start_paradigm;
             end
         end
         
         if lick
             n_reward = n_reward + 1;
-            reward_times(n_trial) = now*1e5 - start_paradigm;
             session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
             pause(ops.water_dispense_duration);
             session.outputSingleScan([0,0,0,0]);
@@ -108,12 +112,13 @@ session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 %% save data
-reward_times(reward_times == 0) = [];
-
-trial_data.reward_times = reward_times;
+%reward_times(reward_times == 0) = [];
+trial_data.time_trial_start = time_trial_start;
+trial_data.time_reward_period_start = time_reward_period_start;
+trial_data.time_correct_lick = time_correct_lick;
+trial_data.time_paradigm_end = time_paradigm_end;
 trial_data.num_trials = n_trial;
 trial_data.num_rewards = n_reward;
-trial_data.end_time = end_time;
 
 temp_time = clock;
 file_name = sprintf('%s_%d_%d_%d_%dh_%dm.mat',fname, temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
