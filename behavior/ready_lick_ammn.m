@@ -2,7 +2,7 @@
 clear;
 
 %% params
-fname = 're_day4_ready_lick_ammn_part4';
+fname = 'nm_day5_RL_ammn_3';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -11,7 +11,7 @@ ops.pre_trial_delay = .5;  % sec
 ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
 ops.failure_timeout = 5;
-ops.post_trial_delay = 2;  % sec
+ops.post_trial_delay = 5;  % sec was 2
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
