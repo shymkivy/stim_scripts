@@ -110,7 +110,7 @@ session.outputSingleScan([0,0]);
 RP.Run;
 RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
-start_paradigm=now*1e5;%GetSecs();
+start_paradigm=now*86400;%GetSecs();
 
 IF_pause_synch(10, session, ops.synch_pulse);
 stim_times = cell(numel(ops.paradigm_sequence),1);
@@ -128,7 +128,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
     
     % run trials
     for trl=1:ops.paradigm_trial_num(parad_num)
-        start_trial1 = now*1e5;%GetSecs();
+        start_trial1 = now*86400;%GetSecs();
    
         ang = stim_ang{parad_num}(trl);
         if cont_parad
@@ -142,7 +142,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
         pause(ops.isi_time+rand(1)/20)
 
         % play
-        start_stim = now*1e5;%GetSecs();
+        start_stim = now*86400;%GetSecs();
         RP.SetTagVal('CarrierFreq', control_carrier_freq(ang));
         session.outputSingleScan([vis_volt,0]);
         session.outputSingleScan([vis_volt,0]);

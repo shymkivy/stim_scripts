@@ -123,7 +123,7 @@ session.IsContinuous = true;
 session.outputSingleScan([0,0]);
 
 %% Run trials
-start_paradigm=now*1e5;%GetSecs();
+start_paradigm=now*86400;%GetSecs();
 
 synch_pulse_onoff = zeros(numel(ops.paradigm_sequence)+2,2);
 
@@ -143,7 +143,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
     
     % run trials
     for trl=1:ops.paradigm_trial_num(parad_num)
-        start_trial1 = now*1e5;%GetSecs();
+        start_trial1 = now*86400;%GetSecs();
    
         ang = stim_ang{parad_num}(trl);
         if cont_parad
@@ -157,7 +157,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
         pause(ops.isi_time+rand(1)/20)
 
         % play
-        start_stim = now*1e5;%GetSecs();
+        start_stim = now*86400;%GetSecs();
         session.outputSingleScan([vis_volt,0]);
         session.outputSingleScan([vis_volt,0]);
         f_RZ6_CP_play(RP, grating_stim_norm(ang,:));
@@ -241,10 +241,10 @@ function pulse_onoff = IF_pause_synch(pause_time, session, synch)
     % synch artifact
     if synch
         pause((pause_time - 1)/2);
-        pulse_onoff(1) = now*1e5;
+        pulse_onoff(1) = now*86400;
         session.outputSingleScan([0,LED_on]);
         pause(1);
-        pulse_onoff(2) = now*1e5;
+        pulse_onoff(2) = now*86400;
         session.outputSingleScan([0,0]);
         pause((pause_time - 1)/2);
     else

@@ -33,17 +33,17 @@ Screen('FillRect', params.win, [params.isicolor params.isicolor params.isicolor]
 Screen('Flip',params.win);
 
 % pause between paradigms
-pause_start = GetSecs();
-pause_now=GetSecs();
+pause_start = now*86400;
+pause_now=now*86400;
 while (pause_now-pause_start) <2
-    pause_now=GetSecs();
+    pause_now=now*86400;
 end
 
 
 for trl=1:params.trials
     fprintf('Trial %d', trl);
     
-    start1 = GetSecs();
+    start1 = now*86400;
     
     % change the probability rule, make it random and adjustable
     ang = (rand(1) < params.dev_probability) + 1;
@@ -64,10 +64,10 @@ for trl=1:params.trials
     % inter stim interval
     if params.DOopto==1
 
-        start2 = GetSecs();
-        now2= GetSecs();
+        start2 = now*86400;
+        now2= now*86400;
         while (now2-start2)<.25
-            now2=GetSecs();
+            now2=now*86400;
         end
 
         if rem(trl,2)==0
@@ -78,18 +78,18 @@ for trl=1:params.trials
 
         session.outputSingleScan([0,opto]);
 
-        start2 = GetSecs();
-        now2= GetSecs();
+        start2 = now*86400;
+        now2= now*86400;
         while (now2-start2)<.25
-            now2=GetSecs();
+            now2=now*86400;
         end
     else
         opto=0;
     end
 
-    now=GetSecs();
+    now=now*86400;
     while (now-start1)<(params.pauseTime+(rand(1,1))/20)
-        now=GetSecs();
+        now=now*86400;
     end
     
     % talk to arduino here
@@ -99,11 +99,11 @@ for trl=1:params.trials
     end
     
     Screen('Flip',params.win);
-    start = GetSecs();
-    now=GetSecs();
+    start = now*86400;
+    now=now*86400;
     
     while (now-start)< params.displayTime
-        now=GetSecs();
+        now=now*86400;
         Screen('DrawTexture', params.win, tex(ang));
         Screen('Flip',params.win);
         session.outputSingleScan([ang,opto]);
@@ -116,17 +116,17 @@ for trl=1:params.trials
     Screen('Flip',params.win);
     
     trialrecord(trl,1)=ang;
-    trialrecord(trl,2)=GetSecs()-start1;
+    trialrecord(trl,2)=now*86400-start1;
     fprintf('; Angle %d\n', ang);
 end
 
 fprintf('deviants fraction: %d\n', sum(trialrecord(:,1)==2)/trl);
 
 % pause between paradigms
-pause_start = GetSecs();
-pause_now=GetSecs();
+pause_start = now*86400;
+pause_now=now*86400;
 while (pause_now-pause_start) < 2
-    pause_now=GetSecs();
+    pause_now=now*86400;
 end
 
 

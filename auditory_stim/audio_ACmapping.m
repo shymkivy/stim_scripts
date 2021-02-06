@@ -118,47 +118,47 @@ synch_pulse_times = zeros(2,1);
 
 
 %% Start paradigm
-paradigm_start = GetSecs();
+paradigm_start = now*86400;
 
 %% sync pulse
 pause(synch_pause_time(1))
 session.outputSingleScan([1,Oon]);
-synch_pulse_times(1) = GetSecs() - paradigm_start;
+synch_pulse_times(1) = now*86400 - paradigm_start;
 pause(synch_pause_time(2));
 session.outputSingleScan([0,Ooff]);
 pause(synch_pause_time(3));
 
 %% Control run
 for tr=1:trials
-    start1 = GetSecs();
+    start1 = now*86400;
     
     freq_type = ceil(rand(1)*num_freqs);
     stim_types(tr) = freq_type;
     
-    nows=GetSecs();
+    nows=now*86400;
     if pretrial_LED_pulse == 1
         session.outputSingleScan([0 Oon]);
         session.outputSingleScan([0 Oon]);
         while nows<start1+pretrial_pulse_duration      
-            nows=GetSecs();
+            nows=now*86400;
         end
         session.outputSingleScan([0 Ooff]);
         session.outputSingleScan([0 Ooff]);
         while nows<start1+pretrial_pulse_duration+pretrial_pulse_wait      
-            nows=GetSecs();
+            nows=now*86400;
         end
-        start1 = GetSecs();
-        nows=GetSecs();
+        start1 = now*86400;
+        nows=now*86400;
     end
     
     % Run audio circuit
     RP.SetTagVal('CarrierFreq', control_carrier_freq(freq_type));
     session.outputSingleScan([freq_type/num_freqs*4 Ooff]);
     session.outputSingleScan([freq_type/num_freqs*4 Ooff]);
-    stim_times(tr) = GetSecs() - paradigm_start;
+    stim_times(tr) = now*86400 - paradigm_start;
     fprintf('trial %d; %.1fkHz\n', tr, control_carrier_freq(freq_type)/1000);
     while nows<start1+duration   
-        nows=GetSecs();
+        nows=now*86400;
     end
     % stop audio circuit
     
@@ -166,10 +166,10 @@ for tr=1:trials
     session.outputSingleScan([0 Ooff]);
     session.outputSingleScan([0 Ooff]);
     % inter stimulus interval
-    start2=GetSecs();
-    nows=GetSecs();
+    start2=now*86400;
+    nows=now*86400;
     while nows<start2+isi
-        nows=GetSecs();
+        nows=now*86400;
     end
 end
 
@@ -177,7 +177,7 @@ end
 %% sync pulse
 pause(synch_pause_time(1))
 session.outputSingleScan([1,Oon]);
-synch_pulse_times(2) = GetSecs() - paradigm_start;
+synch_pulse_times(2) = now*86400 - paradigm_start;
 pause(synch_pause_time(2));
 session.outputSingleScan([0,Ooff]);
 pause(synch_pause_time(3));

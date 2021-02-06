@@ -49,7 +49,7 @@ session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [
 
 pause(5);
 session.outputSingleScan([0,3,0,0]);
-start_paradigm = now*1e5;
+start_paradigm = now*86400;
 pause(1);
 session.outputSingleScan([0,0,0,0]);
 pause(5);
@@ -59,12 +59,12 @@ time_reward_period_start = zeros(ops.trial_cap, 1);
 time_correct_lick = zeros(ops.trial_cap, 1);
 n_trial = 0;
 n_reward = 0;
-while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_cap)
+while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_cap)
     
     % trial available, wait for lick to start
     lick = 0;
     session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8');
-    while and(~lick, (now*1e5 - start_paradigm)<ops.paradigm_duration)
+    while and(~lick, (now*86400 - start_paradigm)<ops.paradigm_duration)
         data_in = inputSingleScan(session);
         if data_in > ops.lick_thresh
             lick = 1;
@@ -77,7 +77,7 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
         if ops.require_second_lick
             lick = 0;
         end
-        start_trial = now*1e5;
+        start_trial = now*86400; 
         time_trial_start(n_trial) = start_trial - start_paradigm;
         
         trial_delay = ops.pre_trial_delay+ops.pre_trial_delay_rand*rand(1);
@@ -88,13 +88,13 @@ while and((now*1e5 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_
             pause(.005);
             session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
         end
-        reward_period_start = now*1e5;
+        reward_period_start = now*86400;
         time_reward_period_start(n_trial) = reward_period_start - start_paradigm;
-        while and(~lick, (now*1e5 - reward_period_start)<(ops.reward_window))
+        while and(~lick, (now*86400 - reward_period_start)<(ops.reward_window))
             data_in = inputSingleScan(session);
             if data_in > ops.lick_thresh
                 lick = 1;
-                time_correct_lick(n_trial) = now*1e5 - start_paradigm;
+                time_correct_lick(n_trial) = now*86400 - start_paradigm;
             end
         end
         
@@ -114,7 +114,7 @@ session.outputSingleScan([0,0,0,0]);
 
 pause(5);
 session.outputSingleScan([0,3,0,0]);
-time_paradigm_end = now*1e5 - start_paradigm;
+time_paradigm_end = now*86400 - start_paradigm;
 pause(1);
 session.outputSingleScan([0,0,0,0]);
 pause(5);

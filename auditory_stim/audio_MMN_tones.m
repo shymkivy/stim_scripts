@@ -9,8 +9,8 @@ tic
 % 
 % trisl_times = zeros(200,1);
 % 
-% paradigm_start_time = GetSecs();
-% trisl_times(tr) = GetSecs()- paradigm_start_time;
+% paradigm_start_time = now*86400;
+% trisl_times(tr) = now*86400- paradigm_start_time;
 
 
 %% some parameters
@@ -87,7 +87,7 @@ synch_pulse_times = zeros(4,1);
 %% run audio circuit
 
 RP.Run;
-paradigm_start=GetSecs();
+paradigm_start=now*86400;
 
 synch_pulse_times(1) = IF_synch_pulse(synch_pause_time, session, Oon, Ooff)-paradigm_start;
 
@@ -95,7 +95,7 @@ synch_pulse_times(1) = IF_synch_pulse(synch_pause_time, session, Oon, Ooff)-para
 disp('Control trials...');
 for tr=1:trials
     freq_type = round(rand*(num_freqs-1))+1;
-    start1 = GetSecs();
+    start1 = now*86400;
     
     % Run audio circuit
     RP.SetTagVal('CarrierFreq', control_carrier_freq(freq_type));
@@ -106,9 +106,9 @@ for tr=1:trials
     stim_types(tr) = freq_type;
     
     % pause
-    nows=GetSecs();
+    nows=now*86400;
     while nows<start1+duration
-        nows=GetSecs();
+        nows=now*86400;
     end
     
     % stop audio circuit
@@ -116,10 +116,10 @@ for tr=1:trials
     session.outputSingleScan([0, 0]);
     
     % inter stimulus interval
-    start2=GetSecs();
-    nows=GetSecs();
+    start2=now*86400;
+    nows=now*86400;
     while nows<start2 + isi + rand(1)/10
-        nows=GetSecs();
+        nows=now*86400;
     end
 end
 
@@ -142,7 +142,7 @@ for tr=1:floor(trials/2)
         end
     end
     
-    start1 = GetSecs();
+    start1 = now*86400;
     
     % Run audio circuit
     RP.SetTagVal('CarrierFreq', carrier_freq(freq_type));
@@ -152,19 +152,19 @@ for tr=1:floor(trials/2)
     stim_types(tr + trials) = freq_type;
     
     % pause
-    nows=GetSecs();
+    nows=now*86400;
     while nows<start1+duration
-        nows=GetSecs();
+        nows=now*86400;
     end
     
     % stop audio circuit
     RP.SetTagVal('CarrierFreq', base_freq);
     session.outputSingleScan([0 0]);
     % inter stimulus interval
-    start2=GetSecs();
-    nows=GetSecs();
+    start2=now*86400;
+    nows=now*86400;
     while nows<start2 + isi + rand(1)/10
-        nows=GetSecs();
+        nows=now*86400;
     end
 end
 
@@ -187,7 +187,7 @@ for tr=1:floor(trials/2)
         end
     end
     
-    start1 = GetSecs();
+    start1 = now*86400;
     
     % Run audio circuit
     RP.SetTagVal('CarrierFreq', carrier_freq(freq_type));
@@ -197,9 +197,9 @@ for tr=1:floor(trials/2)
     stim_types(tr + trials + floor(trials/2)) = freq_type;
     
     % pause
-    nows=GetSecs();
+    nows=now*86400;
     while nows<start1+duration
-        nows=GetSecs();
+        nows=now*86400;
     end
     
     % stop audio circuit
@@ -207,10 +207,10 @@ for tr=1:floor(trials/2)
     session.outputSingleScan([0 0]);
 
     % inter stimulus interval
-    start2=GetSecs();
-    nows=GetSecs();
+    start2=now*86400;
+    nows=now*86400;
     while nows<start2 + isi + rand(1)/10
-        nows=GetSecs();
+        nows=now*86400;
     end
 end
 
@@ -233,7 +233,7 @@ function pulse_time = IF_synch_pulse(synch_pause_time, session, Oon, Ooff)
 
     % sync pulse
     session.outputSingleScan([1,Oon]);
-    pulse_time = GetSecs();
+    pulse_time = now*86400;
     pause(synch_pause_time(2));
     session.outputSingleScan([0,Ooff]);
 
