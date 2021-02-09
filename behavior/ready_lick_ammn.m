@@ -7,6 +7,8 @@ fname = 're_day7_RL_ammn_4';
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
+
+ops.initial_stop_lick_period = 3;
 ops.pre_trial_delay = .5;  % sec
 ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
@@ -122,6 +124,14 @@ n_trial = 0;
 n_reward = 0;
 start_reward_period = -500;
 while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_cap)
+    % wait for animal to stop licking for some time
+    last_lick = now*86400;
+    while (now*86400 - last_lick)<ops.initial_stop_lick_period
+        data_in = inputSingleScan(session);
+        if data_in > ops.lick_thresh
+            last_lick = now*86400;
+        end
+    end
     
     % trial available, wait for lick to start
     lick = 0;
