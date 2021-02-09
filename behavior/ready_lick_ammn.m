@@ -2,7 +2,7 @@
 clear;
 
 %% params
-fname = 'nm_day5_RL_ammn_3';
+fname = 're_day7_RL_ammn_4';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -15,7 +15,7 @@ ops.post_trial_delay = 5;  % sec was 2
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = 0.025;
+ops.water_dispense_duration = 0.03;
 
 ops.lick_thresh = 4;
 
