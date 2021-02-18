@@ -11,20 +11,21 @@
 clear;
 
 %% params
-fname = 'nm_ready_lick_reward_day4';
+fname = 're_day16_rlr_3';
 
-ops.paradigm_duration = 3600;  %  sec
+ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
-ops.pre_trial_delay = 2;  % sec
-ops.pre_trial_delay_rand = 4;
+ops.initial_stop_lick_period = 0;
+ops.pre_trial_delay = 0 ;  % sec
+ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
 ops.post_trial_delay = 5;  % sec
 ops.require_second_lick = 1;
-ops.reward_period_flash = 1;
+ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = 0.025; % or .2 for more trials  
+ops.water_dispense_duration = 0.35; % or .2 for more trials  
 % .025 ~ 137 trials and .5g weight gain
 
 ops.lick_thresh = 4;
@@ -60,6 +61,15 @@ time_correct_lick = zeros(ops.trial_cap, 1);
 n_trial = 0;
 n_reward = 0;
 while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.trial_cap)
+    
+    % wait for animal to stop licking for some time
+    last_lick = now*86400;
+    while (now*86400 - last_lick)<ops.initial_stop_lick_period
+        data_in = inputSingleScan(session);
+        if data_in > ops.lick_thresh
+            last_lick = now*86400;
+        end
+    end
     
     % trial available, wait for lick to start
     lick = 0;

@@ -2,22 +2,22 @@
 clear;
 
 %% params
-fname = 're_day7_RL_ammn_4';
+fname = 'nm_day17_RL_ammn_2';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 
-ops.initial_stop_lick_period = 3;
-ops.pre_trial_delay = .5;  % sec
+ops.initial_stop_lick_period = 1.5;
+ops.pre_trial_delay = 0;  % sec
 ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
 ops.failure_timeout = 5;
-ops.post_trial_delay = 5;  % sec was 2
+ops.post_trial_delay = 2;  % sec was 2
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = 0.03;
+ops.water_dispense_duration = 0.04;
 
 ops.lick_thresh = 4;
 
@@ -46,7 +46,7 @@ ops.num_freqs = 10;
 ops.increase_factor = 1.5;
 ops.MMN_patterns = [3,6; 4,7; 3,8];
 ops.base_freq = 0.001; % baseline frequency
-ops.modulation_amp = 2 ;
+ops.modulation_amp = 3;
 %%
 pwd2 = fileparts(which('ready_lick_ammn.m'));
 
