@@ -2,7 +2,7 @@
 clear;
 
 %% params
-fname = 'nm_day17_RL_ammn_2';
+fname = 'nm_day18_RL_ammn_2';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -120,17 +120,31 @@ time_trial_start = zeros(ops.trial_cap, 1);
 time_reward_period_start = zeros(ops.trial_cap, 1);
 time_correct_lick = zeros(ops.trial_cap, 1);
 time_stim = cell(ops.trial_cap,1);
+time_lick = zeros(ops.trial_cap*50,1);
+num_trial_licks_all = zeros(ops.trial_cap, 1);
+reward_lick_rate = zeros(ops.trial_cap, 1);
+n_lick = 0;
 n_trial = 0;
 n_reward = 0;
 start_reward_period = -500;
+last_off_time = -500;
+last_lick_state = 0;
 while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_cap)
     % wait for animal to stop licking for some time
-    last_lick = now*86400;
-    while (now*86400 - last_lick)<ops.initial_stop_lick_period
+    last_lick2 = now*86400;
+    while (now*86400 - last_lick2)<ops.initial_stop_lick_period
         data_in = inputSingleScan(session);
-        if data_in > ops.lick_thresh
-            last_lick = now*86400;
+        lick_state = data_in > ops.lick_thresh;
+        if (lick_state - last_lick_state) > 0.9
+            last_lick2 = now*86400;
+            if (last_lick2 - last_off_time) > 0.005
+                n_lick = n_lick + 1;
+                time_lick(n_lick) = last_lick2 - start_paradigm;
+            end
+        elseif (lick_state - last_lick_state) < -0.9
+            last_off_time = now*86400;
         end
+        last_lick_state = lick_state;
     end
     
     % trial available, wait for lick to start
@@ -138,9 +152,18 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
     session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8');
     while and(~lick, (now*86400 - start_paradigm)<ops.paradigm_duration)
         data_in = inputSingleScan(session);
-        if data_in > ops.lick_thresh
+        lick_state = data_in > ops.lick_thresh;
+        if (lick_state - last_lick_state) > 0.9
             lick = 1;
+            last_lick2 = now*86400;
+            if (last_lick2 - last_off_time) > 0.005
+                n_lick = n_lick + 1;
+                time_lick(n_lick) = last_lick2 - start_paradigm;
+            end
+        elseif (lick_state - last_lick_state) < -0.9
+            last_off_time = now*86400;
         end
+        last_lick_state = lick_state;
     end
     session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
     
@@ -155,12 +178,14 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
         
         stim_finish = 0;
         reward_received = 0;
+        num_trial_licks = 0;
         num_stim = dev_idx(n_trial)+ops.red_post_trial;
         time_stim{n_tr} = zeros(num_stim,1);
         n_stim = 1;
         
         % start stim
         while and(~stim_finish, n_stim<=num_stim)
+            
             if n_stim == dev_idx(n_trial)
                 stim_type = mmn_red_dev_seq(n_trial,2);
                 reward_trial = 1;
@@ -179,6 +204,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
             end
             % play
             start_stim = now*86400;%GetSecs();
+            
             if reward_trial
                 start_reward_period = start_stim;
                 time_reward_period_start(n_trial) = start_reward_period - start_paradigm;
@@ -188,10 +214,19 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
             session.outputSingleScan([volt,0,0,0]);
             while (now*86400 - start_stim) < ops.stim_time
                 data_in = inputSingleScan(session);
-                if data_in > ops.lick_thresh
+                lick_state = data_in > ops.lick_thresh;
+                if (lick_state - last_lick_state) > 0.9
+                    last_lick2 = now*86400;
+                    if (last_lick2 - last_off_time) > 0.005
+                        n_lick = n_lick + 1;
+                        time_lick(n_lick) = last_lick2 - start_paradigm;
+                        num_trial_licks = num_trial_licks + 1;
+                    end
                     if ~reward_received
                         if (now*86400 - start_reward_period) < ops.reward_window
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
+                            num_trial_licks_all(n_trial) = num_trial_licks;
+                            reward_lick_rate(n_trial) = num_trial_licks/(now*86400 - start_trial);
                             reward_received = 1;
                             session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
                             pause(ops.water_dispense_duration);
@@ -199,7 +234,10 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
                             n_reward = n_reward + 1;
                         end
                     end
+                elseif (lick_state - last_lick_state) < -0.9
+                    last_off_time = now*86400;
                 end
+                last_lick_state = lick_state;
             end
             RP.SetTagVal('CarrierFreq', ops.base_freq);
             session.outputSingleScan([0,0,0,0]);
@@ -210,10 +248,19 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
             isi_duration = ops.isi_time+rand(1)*ops.rand_time_pad;
             while (now*86400 - start_isi) < isi_duration
                 data_in = inputSingleScan(session);
-                if data_in > ops.lick_thresh
+                lick_state = data_in > ops.lick_thresh;
+                if (lick_state - last_lick_state) > 0.9
+                    last_lick2 = now*86400;
+                    if (last_lick2 - last_off_time) > 0.005
+                        n_lick = n_lick + 1;
+                        time_lick(n_lick) = last_lick2 - start_paradigm;
+                        num_trial_licks = num_trial_licks + 1;
+                    end
                     if ~reward_received
                         if (now*86400 - start_reward_period) < ops.reward_window
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
+                            num_trial_licks_all(n_trial) = num_trial_licks;
+                            reward_lick_rate(n_trial) = num_trial_licks/(now*86400 - start_trial);
                             reward_received = 1;
                             session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
                             pause(ops.water_dispense_duration);
@@ -221,7 +268,10 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
                             n_reward = n_reward + 1;
                         end
                     end
+                elseif (lick_state - last_lick_state) < -0.9
+                    last_off_time = now*86400;
                 end
+                last_lick_state = lick_state;
             end
             
             time_stim{n_tr}(n_stim) = start_stim-start_paradigm;
@@ -250,6 +300,9 @@ trial_data.time_trial_start = time_trial_start;
 trial_data.time_reward_period_start = time_reward_period_start;
 trial_data.time_correct_lick = time_correct_lick;
 trial_data.time_paradigm_end = time_paradigm_end;
+trial_data.time_lick = time_lick(time_lick>0);
+trial_data.num_trial_licks_all = num_trial_licks_all;
+trial_data.reward_lick_rate = reward_lick_rate;
 trial_data.num_trials = n_trial;
 trial_data.num_rewards = n_reward;
 
