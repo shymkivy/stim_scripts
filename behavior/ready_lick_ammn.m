@@ -18,8 +18,11 @@ ops.post_trial_delay = 2;  % sec was 2
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = 0.04;
-ops.reward_lick_rate_thersh = .4;
+ops.water_dispense_duration_large = 0.04;
+ops.water_dispense_duration_small = 0.025;
+
+ops.reward_lick_rate_thersh_large = 1;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_small = 1.6;        % licks per sec below thresh give reward
 
 ops.lick_thresh = 4;
 
@@ -227,10 +230,19 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
                     if ~rewarded_trial(n_trial)
                         if (now*86400 - start_reward_period) < ops.reward_window
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
-                            rewarded_trial(n_trial) = 1;
-                            session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
-                            pause(ops.water_dispense_duration);
-                            session.outputSingleScan([volt,0,0,0]);
+                            if reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_large
+                                rewarded_trial(n_trial) = 3;        % large reward
+                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                pause(ops.water_dispense_duration_large);
+                                session.outputSingleScan([volt,0,0,0]);
+                            elseif reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_small
+                                rewarded_trial(n_trial) = 2;        % small reward
+                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                pause(ops.water_dispense_duration_small);
+                                session.outputSingleScan([volt,0,0,0]);
+                            else
+                                rewarded_trial(n_trial) = 1;        % no reward
+                            end
                         end
                     end
                 elseif (lick_state - last_lick_state) < -0.9
@@ -258,10 +270,19 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
                     if ~rewarded_trial(n_trial)
                         if (now*86400 - start_reward_period) < ops.reward_window
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
-                            rewarded_trial(n_trial) = 1;
-                            session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
-                            pause(ops.water_dispense_duration);
-                            session.outputSingleScan([0,0,0,0]);
+                            if reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_large
+                                rewarded_trial(n_trial) = 3;        % large reward
+                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                pause(ops.water_dispense_duration_large);
+                                session.outputSingleScan([volt,0,0,0]);
+                            elseif reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_small
+                                rewarded_trial(n_trial) = 2;        % small reward
+                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                pause(ops.water_dispense_duration_small);
+                                session.outputSingleScan([volt,0,0,0]);
+                            else
+                                rewarded_trial(n_trial) = 1;        % no reward
+                            end
                         end
                     end
                 elseif (lick_state - last_lick_state) < -0.9
