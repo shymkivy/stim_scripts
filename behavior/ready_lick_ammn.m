@@ -3,6 +3,7 @@ clear;
 
 %% params
 fname = 'nm_day18_RL_ammn_2';
+fname_load_data = 'nm_day18_RL_ammn_2';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -289,6 +290,8 @@ session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 %% save data
+trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
+trial_data.dev_idx = dev_idx;
 trial_data.time_trial_start = time_trial_start;
 trial_data.time_reward_period_start = time_reward_period_start;
 trial_data.time_correct_lick = time_correct_lick;
