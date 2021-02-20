@@ -4,9 +4,8 @@ clear;
 %% params
 
 fname = 'nm_day19_RL_ammn_2';
-fname_load_data = 'nm_day18_RL_ammn_1';
 
-ops.paradigm_duration = 1800;  %  sec
+ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 1.5;
@@ -21,8 +20,8 @@ ops.reward_period_flash = 0;
 ops.water_dispense_duration_large = 0.04;
 ops.water_dispense_duration_small = 0.025;
 
-ops.reward_lick_rate_thersh_large = 1;          % licks per sec below thresh give reward
-ops.reward_lick_rate_thersh_small = 1.6;        % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_large = 1.3;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_small = 1.7;        % licks per sec below thresh give reward
 
 ops.lick_thresh = 4;
 
@@ -126,7 +125,7 @@ time_correct_lick = zeros(ops.trial_cap, 1);
 time_stim = cell(ops.trial_cap,1);
 time_lick = zeros(ops.trial_cap*50,1);
 reward_onset_num_licks = zeros(ops.trial_cap, 1);
-rewarded_trial = false(ops.trial_cap, 1);
+reward_type = zeros(ops.trial_cap, 1);
 reward_onset_lick_rate = zeros(ops.trial_cap, 1);
 n_lick = 0;             % record all lick times
 n_trial = 0;            
@@ -227,21 +226,21 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
                         time_lick(n_lick) = last_lick2 - start_paradigm;
                         num_trial_licks2 = num_trial_licks2 + 1;
                     end
-                    if ~rewarded_trial(n_trial)
+                    if ~reward_type(n_trial)
                         if (now*86400 - start_reward_period) < ops.reward_window
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
                             if reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_large
-                                rewarded_trial(n_trial) = 3;        % large reward
+                                reward_type(n_trial) = 3;        % large reward
                                 session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_large);
                                 session.outputSingleScan([volt,0,0,0]);
                             elseif reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_small
-                                rewarded_trial(n_trial) = 2;        % small reward
+                                reward_type(n_trial) = 2;        % small reward
                                 session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_small);
                                 session.outputSingleScan([volt,0,0,0]);
                             else
-                                rewarded_trial(n_trial) = 1;        % no reward
+                                reward_type(n_trial) = 1;        % no reward
                             end
                         end
                     end
@@ -267,21 +266,21 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
                         time_lick(n_lick) = last_lick2 - start_paradigm;
                         num_trial_licks2 = num_trial_licks2 + 1;
                     end
-                    if ~rewarded_trial(n_trial)
+                    if ~reward_type(n_trial)
                         if (now*86400 - start_reward_period) < ops.reward_window
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
                             if reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_large
-                                rewarded_trial(n_trial) = 3;        % large reward
+                                reward_type(n_trial) = 3;        % large reward
                                 session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_large);
                                 session.outputSingleScan([volt,0,0,0]);
                             elseif reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_small
-                                rewarded_trial(n_trial) = 2;        % small reward
+                                reward_type(n_trial) = 2;        % small reward
                                 session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_small);
                                 session.outputSingleScan([volt,0,0,0]);
                             else
-                                rewarded_trial(n_trial) = 1;        % no reward
+                                reward_type(n_trial) = 1;        % no reward
                             end
                         end
                     end
@@ -295,7 +294,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
             
             n_stim = n_stim  + 1;
         end
-        fprintf('n_trial = %d, n_reward = %d\n', n_trial, sum(rewarded_trial));
+        fprintf('n_trial = %d, n_reward = %d, lick rate = %f, reward type = %d\n', n_trial, sum(reward_type>1), reward_onset_lick_rate(n_trial), reward_type(n_trial));
     end
     
     pause(ops.post_trial_delay);
@@ -321,6 +320,7 @@ trial_data.time_correct_lick = time_correct_lick;
 trial_data.time_paradigm_end = time_paradigm_end;
 trial_data.reward_onset_num_licks = reward_onset_num_licks;
 trial_data.reward_onset_lick_rate = reward_onset_lick_rate;
+trial_data.reward_type = reward_type;
 trial_data.num_trials = n_trial;
 trial_data.time_lick = time_lick(time_lick>0);
 
@@ -335,13 +335,22 @@ save([save_path file_name],  'trial_data', 'ops');
 num_red = dev_idx(1:n_trial)-1;
 num_red_u = unique(num_red);
 reward_onset_lick_rate2 = reward_onset_lick_rate(1:n_trial);
-var_thresh = zeros(numel(num_red_u),1);
+var_thresh_50 = zeros(numel(num_red_u),1);
+var_thresh_20 = zeros(numel(num_red_u),1);
 for ii = 1:numel(num_red_u)
     temp_data = reward_onset_lick_rate2(num_red == num_red_u(ii));
-    var_thresh(ii) = prctile(temp_data, ops.reward_lick_rate_thersh*100);
+    var_thresh_50(ii) = prctile(temp_data, 50);
+    var_thresh_20(ii) = prctile(temp_data, 20);
 end
+full_thresh_50 = prctile(reward_onset_lick_rate2, 50);
+full_thresh_20 = prctile(reward_onset_lick_rate2, 20);
 figure; hold on;
 plot(num_red, reward_onset_lick_rate2, 'o');
-plot(num_red_u, var_thresh);
-legend('lick rate', 'thresh');
+plot(num_red_u, var_thresh_50);
+plot(num_red_u, var_thresh_20);
+plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_50);
+plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_20);
+legend('lick rate', 'var thresh 50%', 'var thresh 20%', 'full thresh 50', 'full thresh 20');
 title('lick rate vs num redundants');
+
+fprintf('Analysis: 50%% thresh = %.2f; 20%% thesh = %.2f\n', full_thresh_50, full_thresh_20);
