@@ -3,8 +3,8 @@ clear;
 
 %% params
 
-fname = 'nm_day19_RL_ammn_1';
-fname_load_data = 'nm_day18_RL_ammn_2';
+fname = 'nm_day19_RL_ammn_2';
+fname_load_data = 'nm_day18_RL_ammn_1';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -19,6 +19,7 @@ ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
 ops.water_dispense_duration = 0.04;
+ops.reward_lick_rate_thersh = .4;
 
 ops.lick_thresh = 4;
 
@@ -308,3 +309,18 @@ if ~exist(save_path, 'dir')
     mkdir(save_path);
 end
 save([save_path file_name],  'trial_data', 'ops');
+
+%% plot 
+num_red = dev_idx(1:n_trial)-1;
+num_red_u = unique(num_red);
+reward_onset_lick_rate2 = reward_onset_lick_rate(1:n_trial);
+var_thresh = zeros(numel(num_red_u),1);
+for ii = 1:numel(num_red_u)
+    temp_data = reward_onset_lick_rate2(num_red == num_red_u(ii));
+    var_thresh(ii) = prctile(temp_data, ops.reward_lick_rate_thersh*100);
+end
+figure; hold on;
+plot(num_red, reward_onset_lick_rate2, 'o');
+plot(num_red_u, var_thresh);
+legend('lick rate', 'thresh');
+title('lick rate vs num redundants');
