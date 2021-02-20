@@ -3,7 +3,7 @@ clear;
 
 %% params
 
-fname = 'nm_day19_RL_ammn_2';
+fname = 'nm_day20_RL_ammn_1';
 
 ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -20,8 +20,8 @@ ops.reward_period_flash = 0;
 ops.water_dispense_duration_large = 0.04;
 ops.water_dispense_duration_small = 0.025;
 
-ops.reward_lick_rate_thersh_large = 1.3;          % licks per sec below thresh give reward
-ops.reward_lick_rate_thersh_small = 1.7;        % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_large = 1;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_small = 1.3;        % licks per sec below thresh give reward
 
 ops.lick_thresh = 4;
 
@@ -294,7 +294,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
             
             n_stim = n_stim  + 1;
         end
-        fprintf('n_trial = %d, n_reward = %d, lick rate = %f, reward type = %d\n', n_trial, sum(reward_type>1), reward_onset_lick_rate(n_trial), reward_type(n_trial));
+        fprintf('Trials=%d; correct licks=%d; lick rate=%.2f; reward type=%d; high=%d low=%d none=%d\n', n_trial, sum(reward_type>0), reward_onset_lick_rate(n_trial), reward_type(n_trial), sum(reward_type==3),sum(reward_type==2) ,sum(reward_type==1));
     end
     
     pause(ops.post_trial_delay);
@@ -332,9 +332,9 @@ end
 save([save_path file_name],  'trial_data', 'ops');
 
 %% plot 
-num_red = dev_idx(1:n_trial)-1;
+num_red = dev_idx(reward_type>0)-1;
 num_red_u = unique(num_red);
-reward_onset_lick_rate2 = reward_onset_lick_rate(1:n_trial);
+reward_onset_lick_rate2 = reward_onset_lick_rate(reward_type>0);
 var_thresh_50 = zeros(numel(num_red_u),1);
 var_thresh_20 = zeros(numel(num_red_u),1);
 for ii = 1:numel(num_red_u)
@@ -354,3 +354,4 @@ legend('lick rate', 'var thresh 50%', 'var thresh 20%', 'full thresh 50', 'full 
 title('lick rate vs num redundants');
 
 fprintf('Analysis: 50%% thresh = %.2f; 20%% thesh = %.2f\n', full_thresh_50, full_thresh_20);
+
