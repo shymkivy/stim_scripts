@@ -2,7 +2,7 @@
 clear;
 
 %% params
-fname = 'nm_day18_RL_ammn_2';
+fname = 'nm_day19_RL_ammn_1';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
