@@ -25,6 +25,10 @@ ops.reward_lick_rate_thersh_small = .9;        % licks per sec below thresh give
 
 ops.lick_thresh = 4;
 
+ops.stim_selection_type = 'sequences'; % 'randsamp', 'sequences', 'rand_sequences' 
+ops.MMN_pat = [3, 6];
+ops.num_seq = 50;
+
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
@@ -102,11 +106,22 @@ end
 dev_idx = dev_idx + ops.red_pre_trial;
 
 % stim types
-mmn_red_dev_seq = zeros(ops.trial_cap,2);
-for n_tr = 1:ops.trial_cap
-    mmn_red_dev_seq(n_tr,:) = randsample(ops.stim_range, 2, 0);
-end
 
+if strcmpi(ops.stim_selection_type, 'randsamp')
+    mmn_red_dev_seq = zeros(ops.trial_cap,2);
+    for n_tr = 1:ops.trial_cap
+        mmn_red_dev_seq(n_tr,:) = randsample(ops.stim_range, 2, 0);
+    end
+else
+    num_pat = size(ops.MMN_pat,1)*2;
+    pat_all = repmat([ops.MMN_pat;fliplr(ops.MMN_pat)], ceil(ops.trial_cap/ops.num_seq/num_pat), 1, ops.num_seq);
+    if strcmpi(ops.stim_selection_type, 'sequences')
+        mmn_red_dev_seq = reshape(permute(pat_all, [3 1 2]), [], 2);
+    elseif strcmpi(ops.stim_selection_type, 'rand_sequences')
+        rand_seq = randperm(size(pat_all,1));
+        mmn_red_dev_seq = reshape(permute(pat_all(rand_seq,:,:), [3 1 2]), [], 2);
+    end
+end
 %figure; histogram(dev_idx);
 %% run paradigm
 RP.Run;
