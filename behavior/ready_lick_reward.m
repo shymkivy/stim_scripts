@@ -11,7 +11,7 @@
 clear;
 
 %% params
-fname = 're_day16_rlr_3';
+fname = 'L2_day1_rlr_2';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -25,7 +25,7 @@ ops.post_trial_delay = 5;  % sec
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = 0.35; % or .2 for more trials  
+ops.water_dispense_duration = 0.025; % or .2 for more trials  
 % .025 ~ 137 trials and .5g weight gain
 
 ops.lick_thresh = 4;

@@ -3,7 +3,7 @@ clear;
 
 %% params
 
-fname = 'nm_day20_RL_ammn_1';
+fname = 'nm_day25_RL_ammn_1';
 
 ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -11,7 +11,7 @@ ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 ops.initial_stop_lick_period = 1.5;
 ops.pre_trial_delay = 0;  % sec
 ops.pre_trial_delay_rand = 0;
-ops.reward_window = 2;
+ops.reward_window = 1;
 ops.failure_timeout = 5;
 ops.post_trial_delay = 2;  % sec was 2
 ops.require_second_lick = 1;
@@ -20,8 +20,8 @@ ops.reward_period_flash = 0;
 ops.water_dispense_duration_large = 0.04;
 ops.water_dispense_duration_small = 0.025;
 
-ops.reward_lick_rate_thersh_large = 1;          % licks per sec below thresh give reward
-ops.reward_lick_rate_thersh_small = 1.3;        % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_large = .5;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_small = .9;        % licks per sec below thresh give reward
 
 ops.lick_thresh = 4;
 
@@ -336,22 +336,22 @@ num_red = dev_idx(reward_type>0)-1;
 num_red_u = unique(num_red);
 reward_onset_lick_rate2 = reward_onset_lick_rate(reward_type>0);
 var_thresh_50 = zeros(numel(num_red_u),1);
-var_thresh_20 = zeros(numel(num_red_u),1);
+var_thresh_15 = zeros(numel(num_red_u),1);
 for ii = 1:numel(num_red_u)
     temp_data = reward_onset_lick_rate2(num_red == num_red_u(ii));
     var_thresh_50(ii) = prctile(temp_data, 50);
-    var_thresh_20(ii) = prctile(temp_data, 20);
+    var_thresh_15(ii) = prctile(temp_data, 15);
 end
 full_thresh_50 = prctile(reward_onset_lick_rate2, 50);
-full_thresh_20 = prctile(reward_onset_lick_rate2, 20);
+full_thresh_15 = prctile(reward_onset_lick_rate2, 15);
 figure; hold on;
 plot(num_red, reward_onset_lick_rate2, 'o');
 plot(num_red_u, var_thresh_50);
-plot(num_red_u, var_thresh_20);
+plot(num_red_u, var_thresh_15);
 plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_50);
-plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_20);
-legend('lick rate', 'var thresh 50%', 'var thresh 20%', 'full thresh 50', 'full thresh 20');
+plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_15);
+legend('lick rate', 'var thresh 50%', 'var thresh 15%', 'full thresh 50', 'full thresh 15');
 title('lick rate vs num redundants');
 
-fprintf('Analysis: 50%% thresh = %.2f; 20%% thesh = %.2f\n', full_thresh_50, full_thresh_20);
+fprintf('Analysis: 50%% thresh = %.2f; 15%% thesh = %.2f\n', full_thresh_50, full_thresh_15);
 
