@@ -96,7 +96,7 @@ session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 %% Run script
-trial_data = f_ready_lick_ammn_core(ops, session, RP, start_paradigm);
+ready_lick_ammn_core;
 
 %%
 session.outputSingleScan([0,0,0,0]);
@@ -111,6 +111,17 @@ session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 %% save data
+%% collect data
+trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
+trial_data.dev_idx = dev_idx;
+trial_data.time_trial_start = time_trial_start;
+trial_data.time_reward_period_start = time_reward_period_start;
+trial_data.time_correct_lick = time_correct_lick;
+trial_data.reward_onset_num_licks = reward_onset_num_licks;
+trial_data.reward_onset_lick_rate = reward_onset_lick_rate;
+trial_data.reward_type = reward_type;
+trial_data.num_trials = n_trial;
+trial_data.time_lick = time_lick(time_lick>0);
 trial_data.time_paradigm_end = time_paradigm_end;
 
 temp_time = clock;

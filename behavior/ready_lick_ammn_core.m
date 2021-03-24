@@ -1,4 +1,4 @@
-function trial_data = f_ready_lick_ammn_core(ops, session, RP, start_paradigm)
+
 %% design stim
 % generate control frequencies
 control_carrier_freq = zeros(1, ops.num_freqs);
@@ -225,18 +225,4 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
     
     pause(ops.post_trial_delay);
     
-end
-
-%% cpllect data
-trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
-trial_data.dev_idx = dev_idx;
-trial_data.time_trial_start = time_trial_start;
-trial_data.time_reward_period_start = time_reward_period_start;
-trial_data.time_correct_lick = time_correct_lick;
-trial_data.reward_onset_num_licks = reward_onset_num_licks;
-trial_data.reward_onset_lick_rate = reward_onset_lick_rate;
-trial_data.reward_type = reward_type;
-trial_data.num_trials = n_trial;
-trial_data.time_lick = time_lick(time_lick>0);
-
 end
