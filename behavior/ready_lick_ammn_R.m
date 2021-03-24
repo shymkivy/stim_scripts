@@ -57,4 +57,4 @@ ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 3;
 
 %% Run script
-ready_lick_ammn_core;
+s_ready_lick_ammn_core;
