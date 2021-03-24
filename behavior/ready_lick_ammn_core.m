@@ -1,3 +1,32 @@
+%%
+pwd2 = fileparts(which('ready_lick_ammn.m'));
+
+addpath([pwd2 '\..\auditory_stim\functions']);
+save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
+circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
+circuit_file_name = 'sine_mod_play_YS.rcx';
+%% Initialize arduino
+%arduino_port=serialport('COM19',9600);
+
+%% initialize RZ6
+RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
+RP.Halt;
+
+%% initialize DAQ
+session=daq.createSession('ni');
+session.addAnalogInputChannel('Dev1','ai0','Voltage');
+session.Channels(1).Range = [-10 10];
+session.Channels(1).TerminalConfig = 'SingleEnded';
+session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
+session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
+session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
+session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+
+% start with some water
+session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
+pause(ops.water_dispense_duration_large);
+session.outputSingleScan([0,0,0,0]);
+
 
 %% design stim
 % generate control frequencies
@@ -26,7 +55,6 @@ end
 dev_idx = dev_idx + ops.red_pre_trial;
 
 % stim types
-
 if strcmpi(ops.stim_selection_type, 'randsamp')
     mmn_red_dev_seq = zeros(ops.trial_cap,2);
     for n_tr = 1:ops.trial_cap
@@ -43,8 +71,18 @@ else
     end
 end
 %figure; histogram(dev_idx);
-%%
+%% run paradigm
+RP.Run;
+RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
+pause(5);
+session.outputSingleScan([0,3,0,0]);
+start_paradigm = now*86400;
+pause(1);
+session.outputSingleScan([0,0,0,0]);
+pause(5);
+
+%%
 time_trial_start = zeros(ops.trial_cap, 1);
 time_reward_period_start = zeros(ops.trial_cap, 1);
 time_correct_lick = zeros(ops.trial_cap, 1);
@@ -58,7 +96,7 @@ n_trial = 0;
 start_reward_period = -500;
 last_lick_off_time = -500;
 last_lick_state = 0;
-while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial_cap)
+while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
     % wait for animal to stop licking for some time
     last_lick2 = now*86400;
     while (now*86400 - last_lick2)<ops.initial_stop_lick_period
@@ -226,3 +264,60 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<=ops.trial
     pause(ops.post_trial_delay);
     
 end
+
+%%
+session.outputSingleScan([0,0,0,0]);
+RP.Halt;
+%write(arduino_port, 2, 'uint8'); % turn off LED
+
+pause(5);
+session.outputSingleScan([0,3,0,0]);
+time_paradigm_end = now*86400 - start_paradigm;
+pause(1);
+session.outputSingleScan([0,0,0,0]);
+pause(5);
+
+%% collect data
+trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
+trial_data.dev_idx = dev_idx;
+trial_data.time_trial_start = time_trial_start;
+trial_data.time_reward_period_start = time_reward_period_start;
+trial_data.time_correct_lick = time_correct_lick;
+trial_data.reward_onset_num_licks = reward_onset_num_licks;
+trial_data.reward_onset_lick_rate = reward_onset_lick_rate;
+trial_data.reward_type = reward_type;
+trial_data.num_trials = n_trial;
+trial_data.time_lick = time_lick(time_lick>0);
+trial_data.time_paradigm_end = time_paradigm_end;
+
+temp_time = clock;
+file_name = sprintf('%s_%d_%d_%d_%dh_%dm.mat',fname, temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+if ~exist(save_path, 'dir')
+    mkdir(save_path);
+end
+save([save_path file_name],  'trial_data', 'ops');
+
+%% plot 
+num_red = dev_idx(reward_type>0)-1;
+num_red_u = unique(num_red);
+reward_onset_lick_rate2 = reward_onset_lick_rate(reward_type>0);
+var_thresh_50 = zeros(numel(num_red_u),1);
+var_thresh_15 = zeros(numel(num_red_u),1);
+for ii = 1:numel(num_red_u)
+    temp_data = reward_onset_lick_rate2(num_red == num_red_u(ii));
+    var_thresh_50(ii) = prctile(temp_data, 50);
+    var_thresh_15(ii) = prctile(temp_data, 15);
+end
+full_thresh_50 = prctile(reward_onset_lick_rate2, 50);
+full_thresh_15 = prctile(reward_onset_lick_rate2, 15);
+figure; hold on;
+plot(num_red, reward_onset_lick_rate2, 'o');
+plot(num_red_u, var_thresh_50);
+plot(num_red_u, var_thresh_15);
+plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_50);
+plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_15);
+legend('lick rate', 'var thresh 50%', 'var thresh 15%', 'full thresh 50', 'full thresh 15');
+title('lick rate vs num redundants');
+
+fprintf('Analysis: 50%% thresh = %.2f; 15%% thesh = %.2f\n', full_thresh_50, full_thresh_15);
+
