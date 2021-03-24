@@ -98,7 +98,10 @@ last_lick_high_time = now*86400;
 last_lick_state = 0;
 time_lick_on = zeros(ops.trial_cap*50,1);
 time_lick_off = zeros(ops.trial_cap*50,1);
+lick_transition = 0;
 
+num_trial_licks = 0;
+last_volt = 0;
 start_reward_period = -500;
 n_trial = 0;  
 while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
@@ -125,7 +128,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
         pause(trial_delay);
         
         stim_finish = 0;
-        num_trial_licks2 = 0;
+        num_trial_licks = 0;
         num_stim = dev_idx(n_trial)+ops.red_post_trial;
         time_stim{n_tr} = zeros(num_stim,1);
         n_stim = 1;
@@ -155,8 +158,8 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
             if reward_trial
                 start_reward_period = start_stim;
                 time_reward_period_start(n_trial) = start_reward_period - start_paradigm;
-                reward_onset_num_licks(n_trial) = num_trial_licks2;
-                reward_onset_lick_rate(n_trial) = num_trial_licks2/(now*86400 - start_trial);
+                reward_onset_num_licks(n_trial) = num_trial_licks;
+                reward_onset_lick_rate(n_trial) = num_trial_licks/(now*86400 - start_trial);
             end
             RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
             session.outputSingleScan([volt,0,0,0]);

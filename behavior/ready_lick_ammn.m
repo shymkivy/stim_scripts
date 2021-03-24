@@ -5,7 +5,7 @@ clear;
 fname = 'nm_day44_RL_ammn_1';
 
 ops.paradigm_duration = 3600;  %  sec
-ops.trial_cap = 1;            % 200 - 400 typical with 25sol duration
+ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 1.5;
 ops.pre_trial_delay = 0;  % sec
