@@ -3,25 +3,25 @@ clear;
 
 %% params
 
-fname = 'nm_day44_RL_ammn_1';
+fname = 'R2_day26_RL_ammn_2';
 
 ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
-ops.initial_stop_lick_period = 1.5;
+ops.initial_stop_lick_period = 0;
 ops.pre_trial_delay = 0;  % sec
 ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
 ops.failure_timeout = 5;
-ops.post_trial_delay = 2;  % sec was 2
+ops.post_trial_delay = 4;  % sec was 2
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
 ops.water_dispense_duration_large = 0.04;
 ops.water_dispense_duration_small = 0.025;
 
-ops.reward_lick_rate_thersh_large = 1.2;          % licks per sec below thresh give reward
-ops.reward_lick_rate_thersh_small = 1.6;        % licks per sec below thresh give reward1
+ops.reward_lick_rate_thersh_large = 1.4;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_small = 1.9;        % licks per sec below thresh give reward1
 
 ops.lick_thresh = 4;
 
