@@ -3,7 +3,7 @@ clear;
 
 %% params
 
-fname = 'L2_day26_RL_ammn_1';
+fname = 'L2_day27_RL_ammn_1';
 
 ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -45,6 +45,7 @@ ops.MMN_probab=[0.1*ones(1,max(ops.red_lim-4,1)) .2 .25 .5 1];
 % ------ Other ------
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 ops.lick_thresh = 4.5;
+ops.transition_thresh = 4.5;
 
 % ----- auditory stim params ------------
 ops.start_freq = 2000;

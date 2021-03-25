@@ -44,6 +44,7 @@ ops.MMN_probab=[0.1*ones(1,max(ops.red_lim-4,1)) .2 .25 .5 1];
 % ------ Other ------
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 ops.lick_thresh = 4;
+ops.transition_thresh = 4.5;
 
 % ----- auditory stim params ------------
 ops.start_freq = 2000;
