@@ -24,8 +24,8 @@ ops.reward_lick_rate_thersh_small = 1.6;        % licks per sec below thresh giv
 
 ops.lick_thresh = 4;
 
-ops.stim_selection_type = 'sequences'; % 'randsamp', 'sequences', 'rand_sequences' 
-ops.MMN_pat = [3, 6];
+ops.stim_selection_type = 'randsamp'; % 'randsamp', 'sequences', 'rand_sequences' 
+ops.MMN_pat = [6, 3; 3, 6];
 ops.num_seq = 50;
 
 % ------ Stim params ------

@@ -11,7 +11,7 @@
 clear;
 
 %% params
-fname = 'nm_day49_rlr_2';
+fname = 'test_10_8_21';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -38,12 +38,12 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
 
 %% initialize DAQ
 session=daq.createSession('ni');
-session.addAnalogInputChannel('Dev1','ai0','Voltage');
+session.addAnalogInputChannel('Dev1','ai0','Voltage'); % record licks from sensor
 session.Channels(1).Range = [-10 10];
 session.Channels(1).TerminalConfig = 'SingleEnded';
-session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
+session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type 
 session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
-session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
+session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly'); % reward pin
 session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 %% run paradigm
