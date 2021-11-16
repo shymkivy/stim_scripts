@@ -7,7 +7,7 @@ close all;
 tic
 acquisition_file_name = 'test';
 
-recording_length = 200; % in sec
+recording_length = 1; % in sec
 
 % Select NI-DAQ AI channels to record from:
 % 0 - Lick
@@ -21,7 +21,11 @@ channels = [0 1 2 3 4 5];
 
 %% output file name generation
 pwd2 = fileparts(which('voltage_recording_NI_DAQ.m'));
-save_path = [pwd2 '\output_data\'];
+save_path = [pwd2 '\..\..\..\stim_scripts_output\NI_daq_output\'];
+
+if ~exist(save_path, 'dir')
+    mkdir(save_path);
+end
 
 % add time info to saved file name
 temp_time = clock;
