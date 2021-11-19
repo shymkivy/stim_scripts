@@ -11,7 +11,7 @@
 clear;
 
 %% params
-fname = 'test_10_8_21';
+fname = 'mouseR2';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -21,11 +21,11 @@ ops.pre_trial_delay = 0 ;  % sec
 ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
-ops.post_trial_delay = 5;  % sec
+ops.post_trial_delay = 1;  % sec
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = .35; % or .2 for more trials  
+ops.water_dispense_duration = .025; % or .2 for more trials  
 % .025 ~ 137 trials and .5g weight gain
 
 ops.lick_thresh = 4;
@@ -37,13 +37,14 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
 %arduino_port=serialport('COM19',9600);
 
 %% initialize DAQ
+daq_dev = 'Dev2';
 session=daq.createSession('ni');
-session.addAnalogInputChannel('Dev1','ai0','Voltage'); % record licks from sensor
+session.addAnalogInputChannel(daq_dev,'ai0','Voltage'); % record licks from sensor
 session.Channels(1).Range = [-10 10];
 session.Channels(1).TerminalConfig = 'SingleEnded';
-session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type 
-session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
-session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly'); % reward pin
+session.addAnalogOutputChannel(daq_dev,'ao0','Voltage'); % stim type 
+session.addAnalogOutputChannel(daq_dev,'ao1','Voltage'); % synch pulse LED
+session.addDigitalChannel(daq_dev,'Port0/Line0:1','OutputOnly'); % reward pin
 session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 %% run paradigm

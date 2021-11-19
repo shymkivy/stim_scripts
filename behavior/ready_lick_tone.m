@@ -5,7 +5,7 @@ clear;
 
 fname = 'mosueR2';
 
-ops.paradigm_duration = 3600;  %  sec
+ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 0;
@@ -17,7 +17,7 @@ ops.post_trial_delay = 4;  % sec was 2
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration_large = 0.04;
+ops.water_dispense_duration_large = 0.025;
 ops.water_dispense_duration_small = 0.025;
 
 ops.reward_lick_rate_thersh_large = .9;          % licks per sec below thresh give reward

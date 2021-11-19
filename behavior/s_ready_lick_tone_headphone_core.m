@@ -13,19 +13,19 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
 % RP.Halt;
 
 %% initialize DAQ
-% session=daq.createSession('ni');
-% session.addAnalogInputChannel('Dev1','ai0','Voltage');
-% session.Channels(1).Range = [-10 10];
-% session.Channels(1).TerminalConfig = 'SingleEnded';
-% session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
-% session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
-% session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
-% session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
-% 
-% % start with some water
-% session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
-% pause(ops.water_dispense_duration_large);
-% session.outputSingleScan([0,0,0,0]);
+session=daq.createSession('ni');
+session.addAnalogInputChannel('Dev2','ai0','Voltage');
+session.Channels(1).Range = [-10 10];
+session.Channels(1).TerminalConfig = 'SingleEnded';
+session.addAnalogOutputChannel('Dev2','ao0','Voltage'); % stim type
+session.addAnalogOutputChannel('Dev2','ao1','Voltage'); % synch pulse LED
+session.addDigitalChannel('Dev2','Port0/Line0:1','OutputOnly');
+session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+
+% start with some water
+session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
+pause(ops.water_dispense_duration_large);
+session.outputSingleScan([0,0,0,0]);
 
 
 %% design stim
@@ -84,10 +84,10 @@ dev_idx = ones(ops.trial_cap,1);
 Fs = 8192; %HZ
 tone_x = 1/Fs:1/Fs:.5;
 tone_y = sin(tone_x*ops.tone_learn*2*pi);
-figure; plot(tone_y)
-tic
-sound(tone_y)
-toc
+% figure; plot(tone_y)
+% tic
+% sound(tone_y)
+% toc
 %%
 
 pause(5);
@@ -145,7 +145,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
         stim_finish = 0;
         num_trial_licks = 0;
         num_stim = dev_idx(n_trial);%+ops.red_post_trial;
-        time_stim{n_tr} = zeros(num_stim,1);
+        time_stim{n_trial} = zeros(num_stim,1);
         n_stim = 1;
         
         % start stim
@@ -236,7 +236,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                 end
             end
             
-            time_stim{n_tr}(n_stim) = start_stim-start_paradigm;
+            time_stim{n_trial}(n_stim) = start_stim-start_paradigm;
             
             n_stim = n_stim  + 1;
         end
@@ -260,7 +260,7 @@ session.outputSingleScan([0,0,0,0]);
 pause(5);
 
 %% collect data
-trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
+%trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
 trial_data.dev_idx = dev_idx;
 trial_data.time_trial_start = time_trial_start;
 trial_data.time_reward_period_start = time_reward_period_start;

@@ -5,9 +5,9 @@ close all;
 %% Input paramterets
 
 tic
-acquisition_file_name = 'test';
+acquisition_file_name = 'mouseR2';
 
-recording_length = 1; % in sec
+recording_length = 1830; % in sec
 
 % Select NI-DAQ AI channels to record from:
 % 0 - Lick
@@ -58,7 +58,8 @@ hold on;
 plot(daq_data.time, daq_data.voltage(:,1), 'k');
 plot(daq_data.time, daq_data.voltage(:,6), 'r');
 plot(daq_data.time, daq_data.voltage(:,2), 'b');
-legend('lick', 'reward', 'vis stim');
+plot(daq_data.time, daq_data.voltage(:,5), 'g');
+legend('lick', 'reward', 'vis stim', 'LEDbh');
 
 %%
 disp('Done');
