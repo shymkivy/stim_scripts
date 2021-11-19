@@ -163,8 +163,10 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
             if reward_trial
                 if ops.reward_period_flash
                     session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
+                    session.outputSingleScan([0,0,1,0]);
                     pause(.005);
                     session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+                    session.outputSingleScan([0,0,0,0]);
                 end
             end
             % play
@@ -190,12 +192,16 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                             if reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_large
                                 reward_type(n_trial) = 3;        % large reward
                                 session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                session.outputSingleScan([volt,0,0,1]);
                                 pause(ops.water_dispense_duration_large);
+                                session.outputSingleScan([volt,0,0,0]);
                                 session.outputSingleScan([volt,0,0,0]);
                             elseif reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_small
                                 reward_type(n_trial) = 2;        % small reward
                                 session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                session.outputSingleScan([volt,0,0,1]); 
                                 pause(ops.water_dispense_duration_small);
+                                session.outputSingleScan([volt,0,0,0]);
                                 session.outputSingleScan([volt,0,0,0]);
                             else
                                 reward_type(n_trial) = 1;        % no reward
