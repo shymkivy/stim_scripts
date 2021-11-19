@@ -3,8 +3,8 @@ pwd2 = fileparts(which('ready_lick_ammn.m'));
 
 addpath([pwd2 '\..\auditory_stim\functions']);
 save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
-%circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
-%circuit_file_name = 'sine_mod_play_YS.rcx';
+% circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
+% circuit_file_name = 'sine_mod_play_YS.rcx';
 %% Initialize arduino
 %arduino_port=serialport('COM19',9600);
 
@@ -13,67 +13,82 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
 % RP.Halt;
 
 %% initialize DAQ
-session=daq.createSession('ni');
-session.addAnalogInputChannel('Dev1','ai0','Voltage');
-session.Channels(1).Range = [-10 10];
-session.Channels(1).TerminalConfig = 'SingleEnded';
-session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
-session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
-session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
-session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
-
-% start with some water
-session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
-pause(ops.water_dispense_duration_large);
-session.outputSingleScan([0,0,0,0]);
+% session=daq.createSession('ni');
+% session.addAnalogInputChannel('Dev1','ai0','Voltage');
+% session.Channels(1).Range = [-10 10];
+% session.Channels(1).TerminalConfig = 'SingleEnded';
+% session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
+% session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
+% session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
+% session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+% 
+% % start with some water
+% session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
+% pause(ops.water_dispense_duration_large);
+% session.outputSingleScan([0,0,0,0]);
 
 
 %% design stim
 % generate control frequencies
-control_carrier_freq = zeros(1, ops.num_freqs);
-control_carrier_freq(1) = ops.start_freq;
-for n_stim = 2:ops.num_freqs
-    control_carrier_freq(n_stim) = control_carrier_freq(n_stim-1) * ops.increase_factor;
-end
+% control_carrier_freq = zeros(1, ops.num_freqs);
+% control_carrier_freq(1) = ops.start_freq;
+% for n_stim = 2:ops.num_freqs
+%     control_carrier_freq(n_stim) = control_carrier_freq(n_stim-1) * ops.increase_factor;
+% end
 
 %% design stim types sequence
-dev_idx = zeros(ops.trial_cap,1);
-dev_ctx = 0;
-for n_tr = 1:ops.trial_cap
-    n_stim = 1;
-    while ~dev_ctx
-        curr_prob = ops.MMN_probab(n_stim);
-        dev_ctx = (rand(1) < curr_prob);
-        if dev_ctx
-            dev_idx(n_tr) = n_stim;
-        else
-            n_stim = n_stim + 1;
-        end
-    end
-    dev_ctx = 0;
-end
-dev_idx = dev_idx + ops.red_pre_trial;
+% dev_idx = zeros(ops.trial_cap,1);
+% dev_ctx = 0;
+% for n_tr = 1:ops.trial_cap
+%     n_stim = 1;
+%     while ~dev_ctx
+%         curr_prob = ops.MMN_probab(n_stim);
+%         dev_ctx = (rand(1) < curr_prob);
+%         if dev_ctx
+%             dev_idx(n_tr) = n_stim;
+%         else
+%             n_stim = n_stim + 1;
+%         end
+%     end
+%     dev_ctx = 0;
+% end
+% dev_idx = dev_idx + ops.red_pre_trial;
+% 
+% % stim types
+% if strcmpi(ops.stim_selection_type, 'randsamp')
+%     mmn_red_dev_seq = zeros(ops.trial_cap,2);
+%     for n_tr = 1:ops.trial_cap
+%         mmn_red_dev_seq(n_tr,:) = randsample(ops.stim_range, 2, 0);
+%     end
+% else
+%     num_pat = size(ops.MMN_pat,1)*2;
+%     pat_all = repmat([ops.MMN_pat;fliplr(ops.MMN_pat)], ceil(ops.trial_cap/ops.num_seq/num_pat), 1, ops.num_seq);
+%     if strcmpi(ops.stim_selection_type, 'sequences')
+%         mmn_red_dev_seq = reshape(permute(pat_all, [3 1 2]), [], 2);
+%     elseif strcmpi(ops.stim_selection_type, 'rand_sequences')
+%         rand_seq = randperm(size(pat_all,1));
+%         mmn_red_dev_seq = reshape(permute(pat_all(rand_seq,:,:), [3 1 2]), [], 2);
+%     end
+% end
 
-% stim types
-if strcmpi(ops.stim_selection_type, 'randsamp')
-    mmn_red_dev_seq = zeros(ops.trial_cap,2);
-    for n_tr = 1:ops.trial_cap
-        mmn_red_dev_seq(n_tr,:) = randsample(ops.stim_range, 2, 0);
-    end
-else
-    num_pat = size(ops.MMN_pat,1)*2;
-    pat_all = repmat([ops.MMN_pat;fliplr(ops.MMN_pat)], ceil(ops.trial_cap/ops.num_seq/num_pat), 1, ops.num_seq);
-    if strcmpi(ops.stim_selection_type, 'sequences')
-        mmn_red_dev_seq = reshape(permute(pat_all, [3 1 2]), [], 2);
-    elseif strcmpi(ops.stim_selection_type, 'rand_sequences')
-        rand_seq = randperm(size(pat_all,1));
-        mmn_red_dev_seq = reshape(permute(pat_all(rand_seq,:,:), [3 1 2]), [], 2);
-    end
-end
+dev_idx = ones(ops.trial_cap,1);
+
 %figure; histogram(dev_idx);
 %% run paradigm
-RP.Run;
-RP.SetTagVal('ModulationAmp', ops.modulation_amp);
+% RP.Run;
+% RP.SetTagVal('ModulationAmp', ops.modulation_amp);
+
+
+%%
+% chreate tone trace
+Fs = 8192; %HZ
+tone_x = 1/Fs:1/Fs:.5;
+tone_y = sin(tone_x*ops.tone_learn*2*pi);
+figure; plot(tone_y)
+tic
+sound(tone_y)
+toc
+%%
 
 pause(5);
 session.outputSingleScan([0,3,0,0]);
@@ -129,7 +144,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
         
         stim_finish = 0;
         num_trial_licks = 0;
-        num_stim = dev_idx(n_trial)+ops.red_post_trial;
+        num_stim = dev_idx(n_trial);%+ops.red_post_trial;
         time_stim{n_tr} = zeros(num_stim,1);
         n_stim = 1;
         
@@ -137,13 +152,13 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
         while and(~stim_finish, n_stim<=num_stim)
             
             if n_stim == dev_idx(n_trial)
-                stim_type = mmn_red_dev_seq(n_trial,2);
+                stim_type = 1;%mmn_red_dev_seq(n_trial,2);
                 reward_trial = 1;
             else
                 stim_type = mmn_red_dev_seq(n_trial,1);
                 reward_trial = 0;
             end
-            volt =  stim_type/ops.num_freqs*4;
+            volt = 1;% stim_type/ops.num_freqs*4;
             
             if reward_trial
                 if ops.reward_period_flash
@@ -161,7 +176,8 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                 reward_onset_num_licks(n_trial) = num_trial_licks;
                 reward_onset_lick_rate(n_trial) = num_trial_licks/(now*86400 - start_trial);
             end
-            RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
+            sound(tone_y)
+            %RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
             session.outputSingleScan([volt,0,0,0]);
             session.outputSingleScan([volt,0,0,0]);
             while (now*86400 - start_stim) < ops.stim_time
@@ -188,7 +204,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                     end
                 end
             end
-            RP.SetTagVal('CarrierFreq', ops.base_freq);
+            %RP.SetTagVal('CarrierFreq', ops.base_freq);
             session.outputSingleScan([0,0,0,0]);
             session.outputSingleScan([0,0,0,0]);
             
@@ -233,7 +249,7 @@ end
 
 %%
 session.outputSingleScan([0,0,0,0]);
-RP.Halt;
+%RP.Halt;
 %write(arduino_port, 2, 'uint8'); % turn off LED
 
 pause(5);

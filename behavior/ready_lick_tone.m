@@ -3,16 +3,16 @@ clear;
 
 %% params
 
-fname = 'L2_day46_RL_ammn_1';
+fname = 'mosueR2';
 
 ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 0;
-ops.pre_trial_delay = 0;  % sec
+ops.pre_trial_delay = 2;  % sec
 ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
-ops.failure_timeout = 5;
+ops.failure_timeout = 0;
 ops.post_trial_delay = 4;  % sec was 2
 ops.require_second_lick = 1;
 ops.reward_period_flash = 0;
@@ -20,14 +20,14 @@ ops.reward_period_flash = 0;
 ops.water_dispense_duration_large = 0.04;
 ops.water_dispense_duration_small = 0.025;
 
-ops.reward_lick_rate_thersh_large = .8;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_large = .9;          % licks per sec below thresh give reward
 ops.reward_lick_rate_thersh_small = 0;        % licks per sec below thresh give reward1
 
 ops.lick_thresh = 4;
 
 ops.stim_selection_type = 'sequences'; % 'randsamp', 'sequences', 'rand_sequences' 
-ops.MMN_pat = [6, 3];
-ops.num_seq = 500;
+ops.MMN_pat = [3, 6];
+ops.num_seq = 50;
 
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
@@ -44,7 +44,7 @@ ops.MMN_probab=[0.1*ones(1,max(ops.red_lim-4,1)) .2 .25 .5 1];
 
 % ------ Other ------
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
-ops.lick_thresh = 4.5;
+ops.lick_thresh = 4;
 ops.transition_thresh = 4.5;
 
 % ----- auditory stim params ------------
@@ -57,5 +57,8 @@ ops.MMN_patterns = [3,6; 4,7; 3,8];
 ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 3;
 
+ops.tone_learn = 10000; % kHz
+
 %% Run script
-s_ready_lick_ammn_core;
+%s_ready_lick_ammn_core;
+s_ready_lick_tone_headphone_core;

@@ -3,7 +3,7 @@ clear;
 
 %% params
 
-fname = 'R2_day46_RL_ammn_1';
+fname = 'mosueR2';
 
 ops.paradigm_duration = 3600;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
