@@ -101,7 +101,6 @@ end
 session=daq.createSession('ni');
 session.addAnalogOutputChannel('Dev1','ao0','Voltage');
 session.addAnalogOutputChannel('Dev1','ao1','Voltage');
-session.addAnalogOutputChannel('Dev1','ao2','Voltage'); % stim channel
 session.IsContinuous = true;
 %session.Rate = 10000;
 volt_cmd = [0 0];
