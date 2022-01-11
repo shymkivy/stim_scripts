@@ -3,14 +3,14 @@ pwd2 = fileparts(which('ready_lick_ammn.m'));
 
 addpath([pwd2 '\..\auditory_stim\functions']);
 save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
-circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
-circuit_file_name = 'sine_mod_play_YS.rcx';
+%circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
+%circuit_file_name = 'sine_mod_play_YS.rcx';
 %% Initialize arduino
 %arduino_port=serialport('COM19',9600);
 
 %% initialize RZ6
-RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
-RP.Halt;
+% RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
+% RP.Halt;
 
 %% initialize DAQ
 session=daq.createSession('ni');
