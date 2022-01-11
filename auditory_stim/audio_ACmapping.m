@@ -17,13 +17,13 @@ else
 end
 
 %% Stim info
-trials = 800;
+trials = 400;
 duration = 0.5; % in sec
 isi = 2;
 modulation_amp = 4; % Volume (0 - 10 Volts)
-num_freqs = 20;
+num_freqs = 10;
 start_freq = 2000; %kHz
-increase_factor = sqrt(1.5); % 
+increase_factor = 1.5; % 
 
 %% Script parameters
 synch_pause_time = [10,1,10]; % [pause, synch_pulse, pause] in sec
