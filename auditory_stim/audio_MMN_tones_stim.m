@@ -1,31 +1,33 @@
 %% audio MMN tones script
 %
-%   last update: 12/12/21
+%   last update: 1/22/20
 %
 %%
 clear;
 
-%% trigger Setup
-session = daq.createSession ('ni');
-c=addCounterInputChannel(session,'Dev1', 'ctr1', 'EdgeCount');
-resetCounters(session);
-d=inputSingleScan(session);
-while inputSingleScan(session)~=1
-end
-
 %% parameters
 % ------ Stim params ------
-ops.stim_time = 0.1;                                         % sec
-ops.isi_time = 1.9;
+ops.stim_time = 0.5;                                         % sec
+ops.isi_time = 0.5;
 % ------ Paradigm sequence ------
-ops.paradigm_sequence = {'Control'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
-ops.paradigm_trial_num = [50];                   % how many trials for each paradigm
-ops.paradigm_MMN_pattern = [0];                       % which patterns for MMN/flip (controls are ignored)
+ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
+ops.paradigm_trial_num = [400, 600, 600];                   % how many trials for each paradigm
+ops.paradigm_MMN_pattern = [0,2, 2];                       % which patterns for MMN/flip (controls are ignored)
                                                             % 1= horz/vert; 2= 45deg;
 % ------ MMN params ------
 ops.initial_red_num = 20;                                   % how many redundants to start with
 ops.inter_paradigm_pause_time = 60;                         % how long to pause between paragigms
 ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1]; 
+
+% ----- stim params ----------
+% {paradigm num, 'type', angle/range, volt out}
+% type options: 'dev', 'cont'
+% angle for cont will tag that freq
+% range red: ex [-5 -2] will tag one of red in that relative range
+
+stim_trials_volt = {3, 'dev', [], 1;...
+                    1, 'cont', 3, 2;...
+                    2, 'dev', [], 3};   
 
 % probability of deviants   % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
 % ------ Other ------
@@ -33,12 +35,11 @@ ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 
 % ----- auditory stim params ------------
 ops.start_freq = 2000;
-ops.end_freq = 40000;
+ops.end_freq = 90000;
 
 % ----- auditory tones stim params -------------
-ops.num_freqs = 5;
-%ops.increase_factor = 1.5;
-ops.increase_factor = (ops.end_freq/ops.start_freq).^(1/(ops.num_freqs-1));
+ops.num_freqs = 10;
+ops.increase_factor = 1.5;
 ops.MMN_patterns = [3,6; 4,7; 3,8];
 ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 4; % maybe use 2
@@ -61,21 +62,21 @@ clear temp_time;
 %% compute stim types sequence
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
 stim_ang = cell(numel(ops.paradigm_sequence),1);
-for parad_num = 1:numel(ops.paradigm_sequence)
-    if strcmpi(ops.paradigm_sequence{parad_num}, 'control')
-        samp_seq = randperm(ops.paradigm_trial_num(parad_num));
-        samp_pool = repmat(1:ops.num_freqs,1,ceil(ops.paradigm_trial_num(parad_num)/ops.num_freqs));    
-        stim_ang{parad_num} = samp_pool(samp_seq)';
+for n_pr = 1:numel(ops.paradigm_sequence)
+    if strcmpi(ops.paradigm_sequence{n_pr}, 'control')
+        samp_seq = randperm(ops.paradigm_trial_num(n_pr));
+        samp_pool = repmat(1:ops.num_freqs,1,ceil(ops.paradigm_trial_num(n_pr)/ops.num_freqs));    
+        stim_ang{n_pr} = samp_pool(samp_seq)';
     else
         stdcounts = 0;
-        stim_ang{parad_num} = zeros(ops.paradigm_trial_num(parad_num),1);
-        stim_ctx_stdcount{parad_num} = zeros(ops.paradigm_trial_num(parad_num),2);
-        if strcmpi(ops.paradigm_sequence{parad_num}, 'mmn')
-            curr_MMN_pattern = ops.MMN_patterns(ops.paradigm_MMN_pattern(parad_num),:);
-        elseif strcmpi(ops.paradigm_sequence{parad_num}, 'flip_mmn')
-            curr_MMN_pattern = fliplr(ops.MMN_patterns(ops.paradigm_MMN_pattern(parad_num),:));
+        stim_ang{n_pr} = zeros(ops.paradigm_trial_num(n_pr),1);
+        stim_ctx_stdcount{n_pr} = zeros(ops.paradigm_trial_num(n_pr),2);
+        if strcmpi(ops.paradigm_sequence{n_pr}, 'mmn')
+            curr_MMN_pattern = ops.MMN_patterns(ops.paradigm_MMN_pattern(n_pr),:);
+        elseif strcmpi(ops.paradigm_sequence{n_pr}, 'flip_mmn')
+            curr_MMN_pattern = fliplr(ops.MMN_patterns(ops.paradigm_MMN_pattern(n_pr),:));
         end
-        for trl=1:ops.paradigm_trial_num(parad_num)
+        for trl=1:ops.paradigm_trial_num(n_pr)
             if trl <= ops.initial_red_num
                 ctxt = 1;
                 stdcounts = stdcounts + 1;
@@ -88,9 +89,21 @@ for parad_num = 1:numel(ops.paradigm_sequence)
                     stdcounts=0;
                 end
             end
-            stim_ctx_stdcount{parad_num}(trl,:) = [ctxt, stdcounts];
-            stim_ang{parad_num}(trl) = curr_MMN_pattern(ctxt);
+            stim_ctx_stdcount{n_pr}(trl,:) = [ctxt, stdcounts];
+            stim_ang{n_pr}(trl) = curr_MMN_pattern(ctxt);
         end
+    end
+end
+
+%% tag stim trials
+stim_stim = cell(numel(ops.paradigm_sequence),1);
+for n_tag = 1:size(stim_trials_volt,1)
+    pr_idx = stim_trials_volt{n_tag,1};
+    stim_stim_seq = f_get_stim_trials(stim_trials_volt(n_tag,2:3), stim_ang{pr_idx}, stim_ctx_stdcount{pr_idx});
+    if isempty(stim_stim{pr_idx})
+        stim_stim{pr_idx} = stim_stim_seq*stim_trials_volt{n_tag,4};
+    else
+        stim_stim{pr_idx}(logical(stim_stim_seq)) = stim_stim_seq*stim_trials_volt{n_tag,4};
     end
 end
 
@@ -107,12 +120,14 @@ for ii = 2:ops.num_freqs
 end
 
 %% initialize DAQ
-% session=daq.createSession('ni');
+session=daq.createSession('ni');
 session.addAnalogOutputChannel('Dev1','ao0','Voltage');
 session.addAnalogOutputChannel('Dev1','ao1','Voltage');
 session.IsContinuous = true;
 %session.Rate = 10000;
-session.outputSingleScan([0,0]);
+volt_cmd = [0 0 0];
+session.outputSingleScan(volt_cmd);
+
 
 %% Run trials
 RP.Run;
@@ -120,86 +135,73 @@ RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 start_paradigm=now*86400;%GetSecs();
 
-IF_pause_synch(5, session, ops.synch_pulse);
+f_pause_synch(10, session, ops.synch_pulse, volt_cmd)
 stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
-for parad_num = 1:numel(ops.paradigm_sequence)
-    fprintf('Paradigm %d: %s, %d trials:\n',parad_num, ops.paradigm_sequence{parad_num}, ops.paradigm_trial_num(parad_num));
+for n_pr = 1:numel(ops.paradigm_sequence)
+    fprintf('Paradigm %d: %s, %d trials:\n',n_pr, ops.paradigm_sequence{n_pr}, ops.paradigm_trial_num(n_pr));
     
     % check what paradigm
-    if strcmpi(ops.paradigm_sequence{parad_num}, 'control')
+    if strcmpi(ops.paradigm_sequence{n_pr}, 'control')
         cont_parad = 1;
     else
         cont_parad = 0;
     end
-    stim_times{parad_num} = zeros(ops.paradigm_trial_num(parad_num),1);
+    stim_times{n_pr} = zeros(ops.paradigm_trial_num(n_pr),1);
     
     % run trials
-    for trl=1:ops.paradigm_trial_num(parad_num)
+    for trl=1:ops.paradigm_trial_num(n_pr)
         start_trial1 = now*86400;%GetSecs();
    
-        ang = stim_ang{parad_num}(trl);
+        ang = stim_ang{n_pr}(trl);
         if cont_parad
             vis_volt = ang/ops.num_freqs*4;
         else
-            vis_volt = stim_ctx_stdcount{parad_num}(trl,1);
+            vis_volt = stim_ctx_stdcount{n_pr}(trl,1);
         end
         
-        waitbar(trl/ops.paradigm_trial_num(parad_num), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',parad_num, numel(ops.paradigm_sequence), trl, ang));
+        if ~isempty(stim_stim{n_pr})
+            stim_volt = stim_stim{n_pr}(trl);
+        end
+        
+        waitbar(trl/ops.paradigm_trial_num(n_pr), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',n_pr, numel(ops.paradigm_sequence), trl, ang));
         % pause for isi
         pause(ops.isi_time+rand(1)/20)
 
         % play
         start_stim = now*86400;%GetSecs();
         RP.SetTagVal('CarrierFreq', control_carrier_freq(ang));
-        session.outputSingleScan([vis_volt,0]);
-        session.outputSingleScan([vis_volt,0]);
+        volt_cmd(1) = vis_volt;
+        session.outputSingleScan(volt_cmd);
+        session.outputSingleScan(volt_cmd);
         pause(ops.stim_time);
         RP.SetTagVal('CarrierFreq', ops.base_freq);
-        session.outputSingleScan([0,0]);
-        session.outputSingleScan([0,0]);
+        volt_cmd(1) = 0;
+        session.outputSingleScan(volt_cmd);
+        session.outputSingleScan(volt_cmd);
         
         
         % record
-        stim_times{parad_num}(trl) = start_stim-start_paradigm;
+        stim_times{n_pr}(trl) = start_stim-start_paradigm;
         %fprintf('; Angle %d\n', ang);
     end
     
-    if parad_num < numel(ops.paradigm_sequence)
-        IF_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse);
+    if n_pr < numel(ops.paradigm_sequence)
+        f_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse, volt_cmd);
     end
     
 end
 close(h);
 
 %%
-IF_pause_synch(5, session, ops.synch_pulse)
+f_pause_synch(10, session, ops.synch_pulse, volt_cmd)
 
 %% close all
-session.outputSingleScan([0,0]);
+volt_cmd(1:end) = 0;
+session.outputSingleScan(volt_cmd);
 RP.Halt;
 
 %% save info
 fprintf('Saving...\n');
 save([save_path, file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
 fprintf('Done\n');
-
-%% functions
-
-function IF_pause_synch(pause_time, session, synch)
-    
-    LED_on = 3; %foltage. if diameter of light circle is 1mm, then use 1.5.
-    %if .8mm, use 1.23. these give about 4mw/mm2. 1=1.59mw. 1.23=2.00mw 1.5=2.35mw. 2=3.17. 2.5=3.93. 3=4.67. 3.5=5.36 4=6.05
-
-    % synch artifact
-    if synch
-        pause((pause_time - 1)/2);
-        session.outputSingleScan([0,LED_on]);
-        pause(1);
-        session.outputSingleScan([0,0]);
-        pause((pause_time - 1)/2);
-    else
-        pause(pause_time);
-    end
-
-end
