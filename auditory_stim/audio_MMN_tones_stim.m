@@ -19,6 +19,19 @@ ops.initial_red_num = 20;                                   % how many redundant
 ops.inter_paradigm_pause_time = 60;                         % how long to pause between paragigms
 ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1]; 
 
+% ----- stim params ----------
+% {paradigm num, 'type', angle/range, volt out}
+% type options: 'dev', 'cont'
+% angle for cont will tag that freq
+% range red: ex [-5 -2] will tag one of red in that relative range
+
+ops.stim_trials_volt = {3, 'dev', [], 3;...
+                        1, 'cont', 3, 1;...
+                        2, 'dev', [], 2};   
+ops.stim_delay = .100; % in sec
+ops.stim_trig_duration = 0.01; % sec
+
+                
 % probability of deviants   % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
 % ------ Other ------
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
@@ -30,7 +43,7 @@ ops.end_freq = 90000;
 % ----- auditory tones stim params -------------
 ops.num_freqs = 10;
 ops.increase_factor = 1.5;
-ops.MMN_patterns = [3,6; 4,7; 3,8]; 
+ops.MMN_patterns = [3,6; 4,7; 3,8];
 ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 4; % maybe use 2
 
@@ -57,6 +70,7 @@ for n_pr = 1:numel(ops.paradigm_sequence)
         samp_seq = randperm(ops.paradigm_trial_num(n_pr));
         samp_pool = repmat(1:ops.num_freqs,1,ceil(ops.paradigm_trial_num(n_pr)/ops.num_freqs));    
         stim_ang{n_pr} = samp_pool(samp_seq)';
+        fprintf('paradigm %d; %d trials per freq\n', n_pr, ops.paradigm_trial_num(n_pr)/ops.num_freqs);
     else
         stdcounts = 0;
         stim_ang{n_pr} = zeros(ops.paradigm_trial_num(n_pr),1);
@@ -82,6 +96,20 @@ for n_pr = 1:numel(ops.paradigm_sequence)
             stim_ctx_stdcount{n_pr}(trl,:) = [ctxt, stdcounts];
             stim_ang{n_pr}(trl) = curr_MMN_pattern(ctxt);
         end
+        fprintf('paradigm %d; %d deviants\n', n_pr, sum(stim_ctx_stdcount{n_pr}(:,1)==2));
+    end
+end
+
+
+%% tag stim trials
+stim_stim = cell(numel(ops.paradigm_sequence),1);
+for n_tag = 1:size(ops.stim_trials_volt,1)
+    pr_idx = ops.stim_trials_volt{n_tag,1};
+    stim_stim_seq = f_get_stim_trials(ops.stim_trials_volt(n_tag,2:3), stim_ang{pr_idx}, stim_ctx_stdcount{pr_idx});
+    if isempty(stim_stim{pr_idx})
+        stim_stim{pr_idx} = stim_stim_seq*ops.stim_trials_volt{n_tag,4};
+    else
+        stim_stim{pr_idx}(logical(stim_stim_seq)) = stim_stim_seq*ops.stim_trials_volt{n_tag,4};
     end
 end
 
@@ -101,9 +129,11 @@ end
 session=daq.createSession('ni');
 session.addAnalogOutputChannel('Dev1','ao0','Voltage');
 session.addAnalogOutputChannel('Dev1','ao1','Voltage');
+session.addAnalogOutputChannel('Dev1','ao2','Voltage'); % Prairie trig in (>2V)
+session.addAnalogOutputChannel('Dev1','ao3','Voltage'); % SLM indicator
 session.IsContinuous = true;
 %session.Rate = 10000;
-volt_cmd = [0 0];
+volt_cmd = [0 0 0 0];
 session.outputSingleScan(volt_cmd);
 
 
@@ -113,7 +143,7 @@ RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 start_paradigm=now*86400;%GetSecs();
 
-f_pause_synch(10, session, ops.synch_pulse, volt_cmd);
+f_pause_synch(10, session, ops.synch_pulse, volt_cmd)
 stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
 for n_pr = 1:numel(ops.paradigm_sequence)
@@ -138,6 +168,14 @@ for n_pr = 1:numel(ops.paradigm_sequence)
             vis_volt = stim_ctx_stdcount{n_pr}(trl,1);
         end
         
+        if ~isempty(stim_stim{n_pr})
+            SLM_volt = stim_stim{n_pr}(trl);
+            trig_volt = logical(SLM_volt)*5;
+        else
+            SLM_volt = 0;
+            trig_volt = 0;
+        end
+        
         waitbar(trl/ops.paradigm_trial_num(n_pr), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',n_pr, numel(ops.paradigm_sequence), trl, ang));
         % pause for isi
         pause(ops.isi_time+rand(1)/20)
@@ -146,11 +184,21 @@ for n_pr = 1:numel(ops.paradigm_sequence)
         start_stim = now*86400;%GetSecs();
         RP.SetTagVal('CarrierFreq', control_carrier_freq(ang));
         volt_cmd(1) = vis_volt;
+        volt_cmd(4) = SLM_volt;
         session.outputSingleScan(volt_cmd);
         session.outputSingleScan(volt_cmd);
-        pause(ops.stim_time);
+        pause(ops.stim_delay);
+        volt_cmd(3) = trig_volt;
+        session.outputSingleScan(volt_cmd);
+        session.outputSingleScan(volt_cmd);
+        pause(ops.stim_trig_duration);
+        volt_cmd(3) = 0;
+        session.outputSingleScan(volt_cmd);
+        session.outputSingleScan(volt_cmd);
+        pause(ops.stim_time-ops.stim_delay-ops.stim_trig_duration);
         RP.SetTagVal('CarrierFreq', ops.base_freq);
         volt_cmd(1) = 0;
+        volt_cmd(4) = 0;  
         session.outputSingleScan(volt_cmd);
         session.outputSingleScan(volt_cmd);
         
@@ -177,5 +225,5 @@ RP.Halt;
 
 %% save info
 fprintf('Saving...\n');
-save([save_path, file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount');
+save([save_path, file_name, '.mat'],'ops', 'stim_times', 'stim_ang', 'stim_ctx_stdcount', 'stim_stim');
 fprintf('Done\n');
