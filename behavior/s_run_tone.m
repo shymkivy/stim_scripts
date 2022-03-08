@@ -1,11 +1,11 @@
 if reward_trial
     % add flash if you want before reward starts
     if ops.reward_period_flash
-        session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
-        session.outputSingleScan([0,0,1,0]);
+        session.write([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
+        session.write([0,0,1,0]);
         pause(.005);
-        session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
-        session.outputSingleScan([0,0,0,0]);
+        session.write([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+        session.write([0,0,0,0]);
     end
 end
 % play
@@ -23,8 +23,10 @@ if ops.sound_TD_amp
 else
     sound(all_tones(stim_type,:), Fs);
 end
-session.outputSingleScan([volt,0,0,0]);
-session.outputSingleScan([volt,0,0,0]);
+
+volt = volt_stim;
+session.write([volt,0,0,0]);
+session.write([volt,0,0,0]);
 
 %%
 start_reward = start_stim;
@@ -33,9 +35,9 @@ reward_duration = ops.stim_time;
 s_run_reward_period;
 %%
 
-
 if ops.sound_TD_amp
     RP.SetTagVal('CarrierFreq', ops.base_freq);
 end
-session.outputSingleScan([0,0,0,0]);
-session.outputSingleScan([0,0,0,0]);
+session.write([0,0,0,0]);
+session.write([0,0,0,0]);
+volt = 0;

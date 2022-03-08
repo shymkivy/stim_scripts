@@ -5,7 +5,7 @@ close all;
 %% Input paramterets
 
 tic
-acquisition_file_name = 'mouseR2';
+acquisition_file_name = 'mouseL';
 
 recording_length = 1830; % in sec
 
