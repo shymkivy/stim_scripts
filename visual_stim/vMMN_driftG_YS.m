@@ -86,13 +86,13 @@ AssertOpenGL; % Make sure this is running on OpenGL Psychtoolbox:
 screenid = max(Screen('Screens')); % Choose screen with maximum id - the secondary display on a dual-display setup for display
 [win, rect] = Screen('OpenWindow',screenid, [255/2 255/2 255/2]); % rect is the coordinates of the screen
 ops.flipInterval = Screen('GetFlipInterval', win);
-
-session=daq.createSession('ni');
-session.addAnalogOutputChannel('Dev1','ao0','Voltage');
-session.addAnalogOutputChannel('Dev1','ao1','Voltage');
-session.IsContinuous = true;
-%session.Rate = 10000;
-session.outputSingleScan([0,0]);
+% 
+% session=daq.createSession('ni');
+% session.addAnalogOutputChannel('Dev1','ao0','Voltage');
+% session.addAnalogOutputChannel('Dev1','ao1','Voltage');
+% session.IsContinuous = true;
+% %session.Rate = 10000;
+% session.outputSingleScan([0,0]);
 
 
 %% create stim
@@ -148,7 +148,7 @@ end
 
 
 %%
-IF_pause_synch(10, session, ops.synch_pulse)
+% IF_pause_synch(10, session, ops.synch_pulse)
 
 stim_times = cell(numel(ops.paradigm_sequence),1);
 stim_ang = cell(numel(ops.paradigm_sequence),1);
@@ -219,12 +219,12 @@ for parad_num = 1:numel(ops.paradigm_sequence)
             now=GetSecs();
             Screen('DrawTexture', win, tex(ang,rem(ct,30)+1));
             Screen('Flip',win);
-            session.outputSingleScan([vis_volt,0]);
+%             session.outputSingleScan([vis_volt,0]);
             if ops.driftingGrating
                 ct=ct+1;
             end
         end
-        session.outputSingleScan([0,0]);
+%         session.outputSingleScan([0,0]);
 
         % reset screen
         Screen('FillRect', win, isi_color, rect);
@@ -239,9 +239,9 @@ for parad_num = 1:numel(ops.paradigm_sequence)
         %fprintf('; Angle %d\n', ang);
     end
     
-    if parad_num < numel(ops.paradigm_sequence)
-        IF_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse);
-    end
+%     if parad_num < numel(ops.paradigm_sequence)
+%         IF_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse);
+%     end
     
 end
 close(h);

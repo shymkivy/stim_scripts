@@ -32,7 +32,18 @@ session.write([volt,0,0,0]);
 start_reward = start_stim;
 reward_duration = ops.stim_time;
 
-s_run_reward_period;
+if ops.lick_to_get_reward
+    s_run_reward_period;
+else
+    session.write([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+    pause(ops.water_dispense_duration_large);
+    session.write([volt,0,0,0]);
+    reward_type(n_trial) = 3; 
+    while (now*86400 - start_reward) < reward_duration
+        data_in = read(session, "OutputFormat","Matrix");
+        s_get_lick_state;
+    end
+end
 %%
 
 if ops.sound_TD_amp

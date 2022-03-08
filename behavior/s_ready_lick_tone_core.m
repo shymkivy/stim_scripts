@@ -174,18 +174,22 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
         s_get_lick_state;
     end
     
-    % turn on LED bh (hevavior)
-    session.write([0,0,1,0]); %write(arduino_port, 1, 'uint8');
+    
     
     % at this point trial is available, wait for lick to start
-    while and(lick_transition<1, (now*86400 - start_paradigm)<ops.paradigm_duration)
-        data_in = read(session, "OutputFormat","Matrix");
-        s_get_lick_state;
+    if ops.lick_to_start_trial
+        % turn on LED bh (hevavior)
+        session.write([0,0,1,0]); %write(arduino_port, 1, 'uint8');
+        while and(lick_transition<1, (now*86400 - start_paradigm)<ops.paradigm_duration)
+            data_in = read(session, "OutputFormat","Matrix");
+            s_get_lick_state;
+        end
+        % turn of LED bh
+        session.write([0,0,0,0]);
     end
-    % turn of LED bh
-    session.write([0,0,0,0]);
+    
    
-    if lick_transition>0 % if there was lick new trial
+    if or(lick_transition>0, ~ops.lick_to_start_trial) % if there was lick new trial
         n_trial = n_trial + 1;
         start_trial = now*86400;
         time_trial_start(n_trial) = start_trial - start_paradigm;

@@ -14,8 +14,10 @@ ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 % ------- trial bout params -----------
 ops.initial_stop_lick_period = 0;
+ops.lick_to_start_trial = 0;
 ops.pre_trial_delay = 0;  % sec
 ops.pre_trial_delay_rand = 0;
+ops.lick_to_get_reward = 1;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
 ops.post_trial_delay = 3;  % sec was 2
