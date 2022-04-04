@@ -6,37 +6,37 @@
 clear;
 
 %% trigger Setup
-session = daq.createSession ('ni');
-c=addCounterInputChannel(session,'Dev1', 'ctr1', 'EdgeCount');
-resetCounters(session);
-d=inputSingleScan(session);
-while inputSingleScan(session)~=1
-end
-tic
+% session = daq.createSession ('ni');
+% c=addCounterInputChannel(session,'Dev1', 'ctr1', 'EdgeCount');
+% resetCounters(session);
+% d=inputSingleScan(session);
+% while inputSingleScan(session)~=1
+% end
+% tic
 %% parameters
 % ------ Stim params ------
 ops.stim_time = 0.1;                                         % sec
 ops.isi_time = 1.9;
 % ------ Paradigm sequence ------
 ops.paradigm_sequence = {'Control'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
-ops.paradigm_trial_num = [50];                   % how many trials for each paradigm
+ops.paradigm_trial_num = [30];                   % how many trials for each paradigm
 ops.paradigm_MMN_pattern = [0];                       % which patterns for MMN/flip (controls are ignored)
                                                             % 1= horz/vert; 2= 45deg;
 % ------ MMN params ------
-ops.initial_red_num = 20;                                   % how many redundants to start with
-ops.inter_paradigm_pause_time = 60;                         % how long to pause between paragigms
+ops.initial_red_num = 1;                                   % how many redundants to start with
+ops.inter_paradigm_pause_time = 0.1;                         % how long to pause between paragigms
 ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1]; 
 
 % probability of deviants   % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
-% ------ Other ------
-ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
+%------ Other ------
+ops.synch_pulse = 0;      % 1 Do you want to use led pulse for synchrinization
 
 % ----- auditory stim params ------------
 ops.start_freq = 2000;
 ops.end_freq = 40000;
 
 % ----- auditory tones stim params -------------
-ops.num_freqs = 5;
+ops.num_freqs = 3;
 %ops.increase_factor = 1.5;
 ops.increase_factor = (ops.end_freq/ops.start_freq).^(1/(ops.num_freqs-1));
 ops.MMN_patterns = [3,6; 4,7; 3,8];
@@ -107,12 +107,20 @@ for ii = 2:ops.num_freqs
 end
 
 %% initialize DAQ
-% session=daq.createSession('ni');
+session=daq.createSession('ni');
 session.addAnalogOutputChannel('Dev1','ao0','Voltage');
 session.addAnalogOutputChannel('Dev1','ao1','Voltage');
 session.IsContinuous = true;
 %session.Rate = 10000;
 session.outputSingleScan([0,0]);
+
+% session = daq.createSession ('ni');
+c=addCounterInputChannel(session,'Dev1', 'ctr1', 'EdgeCount');
+resetCounters(session);
+d=inputSingleScan(session);
+while inputSingleScan(session)~=1
+end
+tic
 
 %% Run trials
 RP.Run;
@@ -120,7 +128,7 @@ RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 start_paradigm=now*86400;%GetSecs();
 
-IF_pause_synch(5, session, ops.synch_pulse);
+IF_pause_synch(0.1, session, ops.synch_pulse);
 stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
 for parad_num = 1:numel(ops.paradigm_sequence)
@@ -136,7 +144,7 @@ for parad_num = 1:numel(ops.paradigm_sequence)
     
     % run trials
     for trl=1:ops.paradigm_trial_num(parad_num)
-        start_trial1 = now*86400;%GetSecs();
+%         start_trial1 = now*86400;%GetSecs();
    
         ang = stim_ang{parad_num}(trl);
         if cont_parad

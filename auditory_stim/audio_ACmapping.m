@@ -40,6 +40,7 @@ pretrial_pulse_wait = 0.9; % how long to wait after LED
 %%
 disp('Run estimate (sec):');
 disp(trials*(duration+isi+pretrial_LED_pulse*(pretrial_pulse_duration+pretrial_pulse_wait)) + 100);
+
 %% save output path (saves stuff)
 pwd2 = fileparts(which('audio_ACmapping.m')); %mfilename
 addpath([pwd2 '\functions']);

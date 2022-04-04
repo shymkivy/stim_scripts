@@ -12,7 +12,7 @@ ops.isi_time = 0.5;
 % ------ Paradigm sequence ------
 ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
 ops.paradigm_trial_num = [400, 600, 600];                   % how many trials for each paradigm
-ops.paradigm_MMN_pattern = [0,2, 2];                       % which patterns for MMN/flip (controls are ignored)
+ops.paradigm_MMN_pattern = [0,1, 1];                       % which patterns for MMN/flip (controls are ignored)
                                                             % 1= horz/vert; 2= 45deg;
 % ------ MMN params ------
 ops.initial_red_num = 20;                                   % how many redundants to start with
@@ -47,7 +47,7 @@ circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 circuit_file_name = 'sine_mod_play_YS.rcx';
 
 temp_time = clock;
-file_name = sprintf('aMMN_tones_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('ammn_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 %% compute stim types sequence
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
