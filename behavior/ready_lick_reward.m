@@ -11,21 +11,21 @@
 clear;
 
 %% params
-fname = 'mouseR2';
+fname = 'mouseL';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 0;
-ops.pre_trial_delay = 0 ;  % sec
+ops.pre_trial_delay = 0;  % sec
 ops.pre_trial_delay_rand = 0;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
-ops.post_trial_delay = 1;  % sec
-ops.require_second_lick = 1;
+ops.post_trial_delay = 3;  % sec
+ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = .025; % or .2 for more trials  
+ops.water_dispense_duration = 0.018; % or .2 for more trials  
 % .025 ~ 137 trials and .5g weight gain
 
 ops.lick_thresh = 4;
@@ -38,23 +38,25 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
 
 %% initialize DAQ
 daq_dev = 'Dev2';
-session=daq.createSession('ni');
-session.addAnalogInputChannel(daq_dev,'ai0','Voltage'); % record licks from sensor
+session=daq('ni');
+session.addinput(daq_dev,'ai0','Voltage'); % record licks from sensor
 session.Channels(1).Range = [-10 10];
 session.Channels(1).TerminalConfig = 'SingleEnded';
-session.addAnalogOutputChannel(daq_dev,'ao0','Voltage'); % stim type 
-session.addAnalogOutputChannel(daq_dev,'ao1','Voltage'); % synch pulse LED
-session.addDigitalChannel(daq_dev,'Port0/Line0:1','OutputOnly'); % reward pin
-session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+session.addoutput(daq_dev,'ao0','Voltage'); % Stim type
+session.addoutput(daq_dev,'ao1','Voltage'); % LED
+session.addoutput(daq_dev,'Port0/Line0','Digital'); % LEDbh
+session.addoutput(daq_dev,'Port0/Line1','Digital'); % Reward
+
+session.write([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 %% run paradigm
 
-pause(5);
-session.outputSingleScan([0,3,0,0]);
+% pause(5);
+% session.write([0,3,0,0]);
 start_paradigm = now*86400;
-pause(1);
-session.outputSingleScan([0,0,0,0]);
-pause(5);
+% pause(1);
+% session.write([0,0,0,0]);
+% pause(5);
 
 time_trial_start = zeros(ops.trial_cap, 1);
 time_reward_period_start = zeros(ops.trial_cap, 1);
@@ -66,7 +68,7 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
     % wait for animal to stop licking for some time
     last_lick = now*86400;
     while (now*86400 - last_lick)<ops.initial_stop_lick_period
-        data_in = inputSingleScan(session);
+        data_in = read(session, "OutputFormat","Matrix");
         if data_in > ops.lick_thresh
             last_lick = now*86400;
         end
@@ -74,14 +76,14 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
     
     % trial available, wait for lick to start
     lick = 0;
-    session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8');
+    session.write([0,0,1,0]); %write(arduino_port, 1, 'uint8');
     while and(~lick, (now*86400 - start_paradigm)<ops.paradigm_duration)
-        data_in = inputSingleScan(session);
+        data_in = read(session, "OutputFormat","Matrix");
         if data_in > ops.lick_thresh
             lick = 1;
         end
     end
-    session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+    session.write([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick
         n_trial = n_trial + 1;
@@ -95,14 +97,14 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
         pause(trial_delay);
         
         if ops.reward_period_flash
-            session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
+            session.write([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
             pause(.005);
-            session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+            session.write([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
         end
         reward_period_start = now*86400;
         time_reward_period_start(n_trial) = reward_period_start - start_paradigm;
         while and(~lick, (now*86400 - reward_period_start)<(ops.reward_window))
-            data_in = inputSingleScan(session);
+            data_in = read(session, "OutputFormat","Matrix");
             if data_in > ops.lick_thresh
                 lick = 1;
                 time_correct_lick(n_trial) = now*86400 - start_paradigm;
@@ -111,9 +113,11 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
         
         if lick
             n_reward = n_reward + 1;
-            session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
-            pause(ops.water_dispense_duration);
-            session.outputSingleScan([0,0,0,0]);
+            %for n = 1:100
+                session.write([0,0,0,1]); % write(arduino_port, 3, 'uint8');; 
+                pause(ops.water_dispense_duration);
+                session.write([0,0,0,0]);
+            %end
         else
             pause(ops.failure_timeout);
         end
@@ -121,13 +125,13 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
     end
     pause(ops.post_trial_delay);
 end
-session.outputSingleScan([0,0,0,0]);
+session.write([0,0,0,0]);
 
 pause(5);
-session.outputSingleScan([0,3,0,0]);
+session.write([0,3,0,0]);
 time_paradigm_end = now*86400 - start_paradigm;
 pause(1);
-session.outputSingleScan([0,0,0,0]);
+session.write([0,0,0,0]);
 pause(5);
 
 %% save data

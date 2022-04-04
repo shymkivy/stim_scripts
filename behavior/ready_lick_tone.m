@@ -7,29 +7,28 @@ clear;
 
 %% params
 
-fname = 'mosueR2';
+fname = 'mosueR';
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 % ------- trial bout params -----------
 ops.initial_stop_lick_period = 0;
-ops.pre_trial_delay = 2;  % sec
+ops.lick_to_start_trial = 0;
+ops.pre_trial_delay = 0;  % sec
 ops.pre_trial_delay_rand = 0;
+ops.lick_to_get_reward = 1;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
-ops.post_trial_delay = 4;  % sec was 2
-ops.require_second_lick = 1;
+ops.post_trial_delay = 3;  % sec was 2
+ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration_large = 0.025;
-ops.water_dispense_duration_small = 0.025;
+ops.water_dispense_duration_large = 0.022;% 0.04;
+ops.water_dispense_duration_small = 0.014;% 0.03;
 
-ops.reward_lick_rate_thersh_large = .9;          % licks per sec below thresh give reward
-ops.reward_lick_rate_thersh_small = 0;        % licks per sec below thresh give reward1
-
-
-ops.sound_TD_amp = 0; % else use computer sound card (headphone)
+ops.reward_lick_rate_thersh_large = 1.5;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh give reward1
 
 % cont and mmn are dev trials fit among other trials
 % quiet is dev trial coming in some time range
@@ -37,7 +36,9 @@ ops.sound_TD_amp = 0; % else use computer sound card (headphone)
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
-ops.rand_time_pad = .05;
+ops.rand_time_pad = .025;
+
+ops.sound_TD_amp = 0;
 
 % ----- auditory stim params ------------
 ops.start_freq = 1000;
@@ -59,7 +60,7 @@ ops.dev_probab=[0.1*ones(1,max(ops.red_lim-4,1)) .2 .25 .5 1];
 % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
 
 % 'quiet' params
-ops.quiet_dev_delay_range = [1 4];
+ops.quiet_dev_delay_range = [1 6];
 
 % ----- sequences of trials structure -----------------
 ops.stim_selection_type = 'sequences'; % 'randsamp', 'sequences', 'rand_sequences' 
@@ -73,7 +74,7 @@ ops.lick_thresh = 4;
 ops.transition_thresh = 4.5;
 
 % ----- TD amplifier params-----
-ops.base_freq = 0.001; % baseline frequency
+ops.base_freq = 0.001; % baseline frequecy
 ops.modulation_amp = 3;
 
 %% Run script
