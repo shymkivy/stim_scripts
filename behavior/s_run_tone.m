@@ -30,7 +30,7 @@ session.write([volt,0,0,0]);
 
 %%
 start_reward = start_stim;
-reward_duration = ops.stim_time;
+reward_duration = ops.reward_window;
 
 if ops.lick_to_get_reward
     s_run_reward_period;

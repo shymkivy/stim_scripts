@@ -11,9 +11,9 @@
 clear;
 
 %% params
-fname = 'mouseL';
+fname = 'mouseR_exp3';
 
-ops.paradigm_duration = 1800;  %  sec
+ops.paradigm_duration = 1200;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 0;
@@ -25,7 +25,7 @@ ops.post_trial_delay = 3;  % sec
 ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = 0.018; % or .2 for more trials  
+ops.water_dispense_duration = 5%0.024;% or .2 for more trials  
 % .025 ~ 137 trials and .5g weight gain
 
 ops.lick_thresh = 4;
