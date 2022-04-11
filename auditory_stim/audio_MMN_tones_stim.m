@@ -11,8 +11,8 @@ ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
 % ------ Paradigm sequence ------
 ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
-ops.paradigm_trial_num = [400, 600, 600];                   % how many trials for each paradigm
-ops.paradigm_MMN_pattern = [0,2, 2];                       % which patterns for MMN/flip (controls are ignored)
+ops.paradigm_trial_num = [800, 1200, 1200];                   % how many trials for each paradigm
+ops.paradigm_MMN_pattern = [0,1, 1];                       % which patterns for MMN/flip (controls are ignored)
                                                             % 1= horz/vert; 2= 45deg;
 % ------ MMN params ------
 ops.initial_red_num = 20;                                   % how many redundants to start with
@@ -25,10 +25,10 @@ ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1];
 % angle for cont will tag that freq
 % range red: ex [-5 -2] will tag one of red in that relative range
 
-ops.stim_trials_volt = {3, 'dev', [], 3;...
-                        1, 'cont', 3, 1;...
-                        2, 'dev', [], 2};   
-ops.stim_delay = .100; % in sec
+ops.stim_trials_volt = {1, 'cont', 3, 1};%...
+                        %1, 'cont', 3, 1;...3, 'dev', [], 1
+                        %2, 'dev', [], 2};   
+ops.stim_delay = .01; % in sec
 ops.stim_trig_duration = 0.01; % sec
 
                 
@@ -178,7 +178,7 @@ for n_pr = 1:numel(ops.paradigm_sequence)
         
         waitbar(trl/ops.paradigm_trial_num(n_pr), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',n_pr, numel(ops.paradigm_sequence), trl, ang));
         % pause for isi
-        pause(ops.isi_time+rand(1)/20)
+        
 
         % play
         start_stim = now*86400;%GetSecs();
@@ -197,12 +197,15 @@ for n_pr = 1:numel(ops.paradigm_sequence)
         session.outputSingleScan(volt_cmd);
         pause(ops.stim_time-ops.stim_delay-ops.stim_trig_duration);
         RP.SetTagVal('CarrierFreq', ops.base_freq);
-        volt_cmd(1) = 0;
-        volt_cmd(4) = 0;  
+        volt_cmd(1) = 0; 
         session.outputSingleScan(volt_cmd);
         session.outputSingleScan(volt_cmd);
         
-        
+        % moved isi to end and switch slm after isi 
+        pause(ops.isi_time+rand(1)/20)
+        volt_cmd(4) = 0; 
+        session.outputSingleScan(volt_cmd);
+        session.outputSingleScan(volt_cmd);
         % record
         stim_times{n_pr}(trl) = start_stim-start_paradigm;
         %fprintf('; Angle %d\n', ang);
