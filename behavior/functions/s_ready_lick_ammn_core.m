@@ -123,7 +123,7 @@ n_trial = 0;
 while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
     % wait for animal to stop licking for some time
     while (now*86400 - last_lick_high_time)<ops.initial_stop_lick_period
-        data_in = f_read_daq_out(session, old_daq);
+        data_in = f_read_daq_out(session, ops.old_daq);
         s_get_lick_state;
     end
     
