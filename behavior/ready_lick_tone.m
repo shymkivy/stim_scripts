@@ -10,7 +10,7 @@ addpath([pwd '\functions'])
 fname = 'mouseR_exp3';
 
 
-ops.paradigm_duration = 1800;  %  sec
+ops.paradigm_duration = 1200;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 % ------- trial bout params -----------
