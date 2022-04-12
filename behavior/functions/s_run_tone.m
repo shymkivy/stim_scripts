@@ -29,7 +29,7 @@ f_write_daq_out(session, [volt,0,0,0], old_daq);
 f_write_daq_out(session, [volt,0,0,0], old_daq);
 %%
 start_reward = start_stim;
-reward_duration = ops.stim_time;
+reward_duration = ops.reward_window;
 
 if ops.lick_to_get_reward
     s_run_reward_period;

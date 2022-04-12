@@ -11,9 +11,9 @@
 clear;
 addpath([pwd '\functions'])
 %% params
-fname = 'mouseL';
+fname = 'mouseR_exp3';
 
-ops.paradigm_duration = 1800;  %  sec
+ops.paradigm_duration = 1200;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 0;
@@ -26,7 +26,6 @@ ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
 ops.water_dispense_duration = .02% or .2 for more trials  
-% .025 ~ 137 trials and .5g weight gain
 
 old_daq = 1;
 

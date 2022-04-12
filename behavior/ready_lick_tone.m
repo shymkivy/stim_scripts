@@ -7,7 +7,8 @@ clear;
 addpath([pwd '\functions'])
 %% params
 
-fname = 'mosueR';
+fname = 'mouseR_exp3';
+
 
 ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
@@ -20,12 +21,12 @@ ops.pre_trial_delay_rand = 0;
 ops.lick_to_get_reward = 1;
 ops.reward_window = 2;
 ops.failure_timeout = 0;
-ops.post_trial_delay = 3;  % sec was 2
+ops.post_trial_delay = 2;  % sec was 2
 ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration_large = 0.022;% 0.04;
-ops.water_dispense_duration_small = 0.014;% 0.03;
+ops.water_dispense_duration_large = 0.03;% 0.04;
+ops.water_dispense_duration_small = 0.03;% 0.03;
 
 ops.reward_lick_rate_thersh_large = 1.5;          % licks per sec below thresh give reward
 ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh give reward1
@@ -62,7 +63,7 @@ ops.dev_probab=[0.1*ones(1,max(ops.red_lim-4,1)) .2 .25 .5 1];
 % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
 
 % 'quiet' params
-ops.quiet_dev_delay_range = [1 6];
+ops.quiet_dev_delay_range = [3 13];
 
 % ----- sequences of trials structure -----------------
 ops.stim_selection_type = 'sequences'; % 'randsamp', 'sequences', 'rand_sequences' 
@@ -73,7 +74,7 @@ ops.seq_len = 50;
 % ------ Other params ------
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 ops.lick_thresh = 4;
-ops.transition_thresh = 4.5;
+ops.transition_thresh = 4;
 
 % ----- TD amplifier params-----
 ops.base_freq = 0.001; % baseline frequecy
