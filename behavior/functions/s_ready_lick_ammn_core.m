@@ -13,21 +13,32 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
 % RP.Halt;
 
 %% initialize DAQ
-session=daq.createSession('ni');
-session.addAnalogInputChannel('Dev1','ai0','Voltage');
-session.Channels(1).Range = [-10 10];
-session.Channels(1).TerminalConfig = 'SingleEnded';
-session.addAnalogOutputChannel('Dev1','ao0','Voltage'); % stim type
-session.addAnalogOutputChannel('Dev1','ao1','Voltage'); % synch pulse LED
-session.addDigitalChannel('dev1','Port0/Line0:1','OutputOnly');
-session.outputSingleScan([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+
+if old_daq
+    session=daq.createSession('ni');
+    session.addAnalogInputChannel(daq_dev,'ai0','Voltage');
+    session.Channels(1).Range = [-10 10];
+    session.Channels(1).TerminalConfig = 'SingleEnded';
+    session.addAnalogOutputChannel(daq_dev,'ao0','Voltage');
+    session.addAnalogOutputChannel(daq_dev,'ao1','Voltage');
+    session.addDigitalChannel(daq_dev,'Port0/Line0','OutputOnly');
+    session.addDigitalChannel(daq_dev,'Port0/Line1','OutputOnly'); % Reward
+else
+    session=daq('ni');
+    session.addinput(daq_dev,'ai0','Voltage'); % record licks from sensor
+    session.Channels(1).Range = [-10 10];
+    session.Channels(1).TerminalConfig = 'SingleEnded';
+    session.addoutput(daq_dev,'ao0','Voltage'); % Stim type
+    session.addoutput(daq_dev,'ao1','Voltage'); % LED
+    session.addoutput(daq_dev,'Port0/Line0','Digital'); % LEDbh
+    session.addoutput(daq_dev,'Port0/Line1','Digital'); % Reward
+end
+f_write_daq_out(session, [0,0,0,0], old_daq);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 % start with some water
-session.outputSingleScan([0,0,0,1]); % write(arduino_port, 3, 'uint8');
+f_write_daq_out(session, [0,0,0,1], old_daq); % write(arduino_port, 3, 'uint8');
 pause(ops.water_dispense_duration_large);
-session.outputSingleScan([0,0,0,0]);
-
-
+f_write_daq_out(session, [0,0,0,0], old_daq);
 %% design stim
 % generate control frequencies
 control_carrier_freq = zeros(1, ops.num_freqs);
@@ -76,10 +87,10 @@ RP.Run;
 RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 pause(5);
-session.outputSingleScan([0,3,0,0]);
+f_write_daq_out(session, [0,3,0,0], old_daq);
 start_paradigm = now*86400;
 pause(1);
-session.outputSingleScan([0,0,0,0]);
+f_write_daq_out(session, [0,0,0,0], old_daq);
 pause(5);
 
 %%
@@ -107,17 +118,17 @@ n_trial = 0;
 while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
     % wait for animal to stop licking for some time
     while (now*86400 - last_lick_high_time)<ops.initial_stop_lick_period
-        data_in = inputSingleScan(session);
+        data_in = f_read_daq_out(session, old_daq);
         s_get_lick_state;
     end
     
     % trial available, wait for lick to start
-    session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8');
+    f_write_daq_out(session, [0,0,1,0], old_daq); %write(arduino_port, 1, 'uint8');
     while and(lick_transition<1, (now*86400 - start_paradigm)<ops.paradigm_duration)
-        data_in = inputSingleScan(session);
+        data_in = f_read_daq_out(session, old_daq);
         s_get_lick_state;
     end
-    session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+    f_write_daq_out(session, [0,0,0,0], old_daq); %write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick_transition>0
         n_trial = n_trial + 1;
@@ -147,9 +158,9 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
             
             if reward_trial
                 if ops.reward_period_flash
-                    session.outputSingleScan([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
+                    f_write_daq_out(session, [0,0,1,0], old_daq); %write(arduino_port, 1, 'uint8'); % turn on LED
                     pause(.005);
-                    session.outputSingleScan([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+                    f_write_daq_out(session, [0,0,0,0], old_daq); %write(arduino_port, 2, 'uint8'); % turn off LED
                 end
             end
             % play
@@ -162,10 +173,10 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                 reward_onset_lick_rate(n_trial) = num_trial_licks/(now*86400 - start_trial);
             end
             RP.SetTagVal('CarrierFreq', control_carrier_freq(stim_type));
-            session.outputSingleScan([volt,0,0,0]);
-            session.outputSingleScan([volt,0,0,0]);
+            f_write_daq_out(session, [volt,0,0,0], old_daq);
+            f_write_daq_out(session, [volt,0,0,0], old_daq);
             while (now*86400 - start_stim) < ops.stim_time
-                data_in = inputSingleScan(session);
+                data_in = f_read_daq_out(session, old_daq);
                 s_get_lick_state;
                 if lick_transition>0
                     if ~reward_type(n_trial) % if not rewarded yet
@@ -173,14 +184,14 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
                             if reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_large
                                 reward_type(n_trial) = 3;        % large reward
-                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                f_write_daq_out(session, [volt,0,0,1], old_daq);% write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_large);
-                                session.outputSingleScan([volt,0,0,0]);
+                                f_write_daq_out(session, [volt,0,0,0], old_daq);
                             elseif reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_small
                                 reward_type(n_trial) = 2;        % small reward
-                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                f_write_daq_out(session, [volt,0,0,1], old_daq); % write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_small);
-                                session.outputSingleScan([volt,0,0,0]);
+                                f_write_daq_out(session, [volt,0,0,0], old_daq);
                             else
                                 reward_type(n_trial) = 1;        % no reward
                             end
@@ -189,8 +200,8 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                 end
             end
             RP.SetTagVal('CarrierFreq', ops.base_freq);
-            session.outputSingleScan([0,0,0,0]);
-            session.outputSingleScan([0,0,0,0]);
+            f_write_daq_out(session, [0,0,0,0], old_daq);
+            f_write_daq_out(session, [0,0,0,0], old_daq);
             
             % pause for isi
             start_isi = now*86400;
@@ -204,14 +215,14 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
                             time_correct_lick(n_trial) = now*86400 - start_paradigm;
                             if reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_large
                                 reward_type(n_trial) = 3;        % large reward
-                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                f_write_daq_out(session, [volt,0,0,1], old_daq); % write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_large);
-                                session.outputSingleScan([volt,0,0,0]);
+                                f_write_daq_out(session, [volt,0,0,0], old_daq);
                             elseif reward_onset_lick_rate(n_trial)<ops.reward_lick_rate_thersh_small
                                 reward_type(n_trial) = 2;        % small reward
-                                session.outputSingleScan([volt,0,0,1]); % write(arduino_port, 3, 'uint8');
+                                f_write_daq_out(session, [volt,0,0,1], old_daq); % write(arduino_port, 3, 'uint8');
                                 pause(ops.water_dispense_duration_small);
-                                session.outputSingleScan([volt,0,0,0]);
+                                f_write_daq_out(session, [volt,0,0,0], old_daq);
                             else
                                 reward_type(n_trial) = 1;        % no reward
                             end
@@ -230,60 +241,4 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_
     pause(ops.post_trial_delay);
     
 end
-
-%%
-session.outputSingleScan([0,0,0,0]);
-RP.Halt;
-%write(arduino_port, 2, 'uint8'); % turn off LED
-
-pause(5);
-session.outputSingleScan([0,3,0,0]);
-time_paradigm_end = now*86400 - start_paradigm;
-pause(1);
-session.outputSingleScan([0,0,0,0]);
-pause(5);
-
-%% collect data
-trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
-trial_data.dev_idx = dev_idx;
-trial_data.time_trial_start = time_trial_start;
-trial_data.time_reward_period_start = time_reward_period_start;
-trial_data.time_correct_lick = time_correct_lick;
-trial_data.reward_onset_num_licks = reward_onset_num_licks;
-trial_data.reward_onset_lick_rate = reward_onset_lick_rate;
-trial_data.reward_type = reward_type;
-trial_data.num_trials = n_trial;
-trial_data.time_lick = time_lick_on(time_lick_on>0);
-trial_data.time_paradigm_end = time_paradigm_end;
-
-temp_time = clock;
-file_name = sprintf('%s_%d_%d_%d_%dh_%dm.mat',fname, temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
-if ~exist(save_path, 'dir')
-    mkdir(save_path);
-end
-save([save_path file_name],  'trial_data', 'ops');
-
-%% plot 
-num_red = dev_idx(reward_type>0)-1;
-num_red_u = unique(num_red);
-reward_onset_lick_rate2 = reward_onset_lick_rate(reward_type>0);
-var_thresh_50 = zeros(numel(num_red_u),1);
-var_thresh_15 = zeros(numel(num_red_u),1);
-for ii = 1:numel(num_red_u)
-    temp_data = reward_onset_lick_rate2(num_red == num_red_u(ii));
-    var_thresh_50(ii) = prctile(temp_data, 50);
-    var_thresh_15(ii) = prctile(temp_data, 15);
-end
-full_thresh_50 = prctile(reward_onset_lick_rate2, 50);
-full_thresh_15 = prctile(reward_onset_lick_rate2, 15);
-figure; hold on;
-plot(num_red, reward_onset_lick_rate2, 'o');
-plot(num_red_u, var_thresh_50);
-plot(num_red_u, var_thresh_15);
-plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_50);
-plot(num_red_u, ones(numel(num_red_u),1)*full_thresh_15);
-legend('lick rate', 'var thresh 50%', 'var thresh 15%', 'full thresh 50', 'full thresh 15');
-title('lick rate vs num redundants');
-
-fprintf('Analysis: 50%% thresh = %.2f; 15%% thesh = %.2f\n', full_thresh_50, full_thresh_15);
 

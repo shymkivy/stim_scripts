@@ -1,5 +1,6 @@
 % communicates with the "minimal" arduino script
 clear;
+addpath([pwd '\functions'])
 
 %% params
 fname = 'nm_day44_RL_ammn_1';
@@ -23,6 +24,9 @@ ops.reward_lick_rate_thersh_large = 1.2;          % licks per sec below thresh g
 ops.reward_lick_rate_thersh_small = 1.6;        % licks per sec below thresh give reward1
 
 ops.lick_thresh = 4;
+
+daq_dev = 'Dev1';
+old_daq = 1;
 
 ops.stim_selection_type = 'randsamp'; % 'randsamp', 'sequences', 'rand_sequences' 
 ops.MMN_pat = [6, 3; 3, 6];
@@ -57,5 +61,10 @@ ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 3;
 
 %% Run script
-%s_ready_lick_ammn_core;
-s_ready_lick_ammn_headphone_core;
+s_ready_lick_ammn_core;
+
+
+%%
+s_ready_lick_ammn_save;
+
+disp('Done')

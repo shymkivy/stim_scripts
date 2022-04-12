@@ -4,7 +4,7 @@
 
 % no arduino script required, only as power source
 clear;
-
+addpath([pwd '\functions'])
 %% params
 
 fname = 'mosueR';
@@ -32,13 +32,15 @@ ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh giv
 
 % cont and mmn are dev trials fit among other trials
 % quiet is dev trial coming in some time range
+daq_dev = 'Dev1';
+old_daq = 1;
 
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
 ops.rand_time_pad = .025;
 
-ops.sound_TD_amp = 0;
+ops.sound_TD_amp = 1;
 
 % ----- auditory stim params ------------
 ops.start_freq = 1000;
@@ -80,3 +82,9 @@ ops.modulation_amp = 3;
 %% Run script
 %s_ready_lick_ammn_core;
 s_ready_lick_tone_core;
+
+%%
+s_ready_lick_tone_save;
+
+disp('Done')
+

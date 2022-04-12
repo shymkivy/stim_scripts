@@ -9,7 +9,7 @@
 %       pretrial rand delay = 4;
 %       posttrial delay = 5
 clear;
-
+addpath([pwd '\functions'])
 %% params
 fname = 'mouseL';
 
@@ -25,8 +25,10 @@ ops.post_trial_delay = 3;  % sec
 ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = 0.018; % or .2 for more trials  
+ops.water_dispense_duration = .02% or .2 for more trials  
 % .025 ~ 137 trials and .5g weight gain
+
+old_daq = 1;
 
 ops.lick_thresh = 4;
 %%
@@ -37,17 +39,28 @@ save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
 %arduino_port=serialport('COM19',9600);
 
 %% initialize DAQ
-daq_dev = 'Dev2';
-session=daq('ni');
-session.addinput(daq_dev,'ai0','Voltage'); % record licks from sensor
-session.Channels(1).Range = [-10 10];
-session.Channels(1).TerminalConfig = 'SingleEnded';
-session.addoutput(daq_dev,'ao0','Voltage'); % Stim type
-session.addoutput(daq_dev,'ao1','Voltage'); % LED
-session.addoutput(daq_dev,'Port0/Line0','Digital'); % LEDbh
-session.addoutput(daq_dev,'Port0/Line1','Digital'); % Reward
+daq_dev = 'Dev1';
 
-session.write([0,0,0,0]);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+if old_daq
+    session=daq.createSession('ni');
+    session.addAnalogInputChannel(daq_dev,'ai0','Voltage');
+    session.Channels(1).Range = [-10 10];
+    session.Channels(1).TerminalConfig = 'SingleEnded';
+    session.addAnalogOutputChannel(daq_dev,'ao0','Voltage');
+    session.addAnalogOutputChannel(daq_dev,'ao1','Voltage');
+    session.addDigitalChannel(daq_dev,'Port0/Line0','OutputOnly');
+    session.addDigitalChannel(daq_dev,'Port0/Line1','OutputOnly'); % Reward
+else
+    session=daq('ni');
+    session.addinput(daq_dev,'ai0','Voltage'); % record licks from sensor
+    session.Channels(1).Range = [-10 10];
+    session.Channels(1).TerminalConfig = 'SingleEnded';
+    session.addoutput(daq_dev,'ao0','Voltage'); % Stim type
+    session.addoutput(daq_dev,'ao1','Voltage'); % LED
+    session.addoutput(daq_dev,'Port0/Line0','Digital'); % LEDbh
+    session.addoutput(daq_dev,'Port0/Line1','Digital'); % Reward
+end
+f_write_daq_out(session, [0,0,0,0], old_daq);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 %% run paradigm
 
@@ -76,14 +89,15 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
     
     % trial available, wait for lick to start
     lick = 0;
-    session.write([0,0,1,0]); %write(arduino_port, 1, 'uint8');
+    f_write_daq_out(session, [0,0,1,0], old_daq); %write(arduino_port, 1, 'uint8');
     while and(~lick, (now*86400 - start_paradigm)<ops.paradigm_duration)
-        data_in = read(session, "OutputFormat","Matrix");
+        data_in = f_read_daq_out(session, old_daq);
         if data_in > ops.lick_thresh
             lick = 1;
         end
     end
-    session.write([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+
+    f_write_daq_out(session, [0,0,0,0], old_daq);  %write(arduino_port, 2, 'uint8'); % turn off LED
     
     if lick
         n_trial = n_trial + 1;
@@ -97,14 +111,14 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
         pause(trial_delay);
         
         if ops.reward_period_flash
-            session.write([0,0,1,0]); %write(arduino_port, 1, 'uint8'); % turn on LED
+            f_write_daq_out(session, [0,0,1,0], old_daq); %write(arduino_port, 1, 'uint8'); % turn on LED
             pause(.005);
-            session.write([0,0,0,0]); %write(arduino_port, 2, 'uint8'); % turn off LED
+            f_write_daq_out(session, [0,0,0,0], old_daq); %write(arduino_port, 2, 'uint8'); % turn off LED
         end
         reward_period_start = now*86400;
         time_reward_period_start(n_trial) = reward_period_start - start_paradigm;
         while and(~lick, (now*86400 - reward_period_start)<(ops.reward_window))
-            data_in = read(session, "OutputFormat","Matrix");
+            data_in = f_read_daq_out(session, old_daq);
             if data_in > ops.lick_thresh
                 lick = 1;
                 time_correct_lick(n_trial) = now*86400 - start_paradigm;
@@ -113,11 +127,9 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
         
         if lick
             n_reward = n_reward + 1;
-            %for n = 1:100
-                session.write([0,0,0,1]); % write(arduino_port, 3, 'uint8');; 
-                pause(ops.water_dispense_duration);
-                session.write([0,0,0,0]);
-            %end
+            f_write_daq_out(session, [0,0,0,1], old_daq);% write(arduino_port, 3, 'uint8');; 
+            pause(ops.water_dispense_duration);
+            f_write_daq_out(session, [0,0,0,0], old_daq);
         else
             pause(ops.failure_timeout);
         end
@@ -125,13 +137,13 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_reward<=ops.tria
     end
     pause(ops.post_trial_delay);
 end
-session.write([0,0,0,0]);
 
+f_write_daq_out(session, [0,0,0,0], old_daq);
 pause(5);
-session.write([0,3,0,0]);
+f_write_daq_out(session, [0,3,0,0], old_daq);
 time_paradigm_end = now*86400 - start_paradigm;
 pause(1);
-session.write([0,0,0,0]);
+f_write_daq_out(session, [0,0,0,0], old_daq);
 pause(5);
 
 %% save data
