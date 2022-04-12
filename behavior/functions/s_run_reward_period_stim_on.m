@@ -1,5 +1,4 @@
 while (now*86400 - start_reward) < reward_duration
-    % get licks while also maybe give reward
     data_in = f_read_daq_out(session, old_daq);
     s_get_lick_state;
     if lick_transition>0 % if a new lick

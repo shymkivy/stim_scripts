@@ -4,7 +4,13 @@
 
 % no arduino script required, only as power source
 clear;
-addpath([pwd '\functions'])
+
+pwd1 = mfilename('fullpath');
+if isempty(pwd1)
+    pwd1 = pwd;
+    %pwd1 = fileparts(which('ready_lick_ammn.m'));
+end
+addpath([pwd1 '\functions'])
 %% params
 
 fname = 'mouseR_exp3';
@@ -35,6 +41,8 @@ ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh giv
 % quiet is dev trial coming in some time range
 daq_dev = 'Dev1';
 old_daq = 1;
+ops.daq_dev = daq_dev;
+ops.old_daq = old_daq;
 
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
@@ -79,6 +87,10 @@ ops.transition_thresh = 4;
 % ----- TD amplifier params-----
 ops.base_freq = 0.001; % baseline frequecy
 ops.modulation_amp = 3;
+
+%%
+ops.LED_bh
+
 
 %% Run script
 %s_ready_lick_ammn_core;

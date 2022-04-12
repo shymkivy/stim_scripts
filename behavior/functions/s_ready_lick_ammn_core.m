@@ -1,8 +1,13 @@
 %%
-pwd2 = fileparts(which('ready_lick_ammn.m'));
 
-addpath([pwd2 '\..\auditory_stim\functions']);
-save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
+pwd1 = mfilename('fullpath');
+if isempty(pwd1)
+    pwd1 = pwd;
+    %pwd1 = fileparts(which('ready_lick_ammn.m'));
+end
+
+addpath([pwd1 '\..\auditory_stim\functions']);
+save_path = [pwd1 '\..\..\stim_scripts_output\behavior\'];
 %circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 %circuit_file_name = 'sine_mod_play_YS.rcx';
 %% Initialize arduino

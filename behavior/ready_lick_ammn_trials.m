@@ -1,6 +1,12 @@
 % communicates with the "minimal" arduino script
 clear;
-addpath([pwd '\functions'])
+
+pwd1 = mfilename('fullpath');
+if isempty(pwd1)
+    pwd1 = pwd;
+    %pwd1 = fileparts(which('ready_lick_ammn.m'));
+end
+addpath([pwd1 '\functions'])
 
 %% params
 fname = 'nm_day44_RL_ammn_1';
