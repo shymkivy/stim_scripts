@@ -1,31 +1,26 @@
 %%
-f_write_daq_out(session, [0,0,0,0], old_daq);
+f_write_daq_out(session, [0,0,0,0], ops.old_daq);
 if ops.sound_TD_amp
     RP.Halt;
 end
 %write(arduino_port, 2, 'uint8'); % turn off LED
 
 pause(5);
-f_write_daq_out(session, [0,3,0,0], old_daq);
-time_paradigm_end = now*86400 - start_paradigm;
+f_write_daq_out(session, [0,3,0,0], ops.old_daq);
+time_paradigm_end = now*86400 - state.start_paradigm;
 pause(1);
-f_write_daq_out(session, [0,0,0,0], old_daq);
+f_write_daq_out(session, [0,0,0,0], ops.old_daq);
 pause(5);
 
 %% collect data
 %trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
-trial_data.dev_seq = dev_seq;
+trial_data.start_paradigm = state.start_paradigm;
+trial_data = data;
 if strcmpi(ops.trial_ctx_type, 'quiet')
     trial_data.dev_times = dev_times;
 else
     trial_data.dev_idx = dev_idx;
 end
-trial_data.time_trial_start = time_trial_start;
-trial_data.time_reward_period_start = time_reward_period_start;
-trial_data.time_correct_lick = time_correct_lick;
-trial_data.reward_onset_num_licks = reward_onset_num_licks;
-trial_data.reward_onset_lick_rate = reward_onset_lick_rate;
-trial_data.reward_type = reward_type;
 trial_data.num_trials = n_trial;
 trial_data.time_lick = time_lick_on(time_lick_on>0);
 trial_data.time_paradigm_end = time_paradigm_end;
@@ -38,7 +33,7 @@ end
 save([save_path file_name],  'trial_data', 'ops');
 
 %% plot
-reward_onset_lick_rate2 = reward_onset_lick_rate(reward_type>0);
+reward_onset_lick_rate2 = data.reward_onset_lick_rate(reward_type>0);
 full_thresh_50 = prctile(reward_onset_lick_rate2, 50);
 full_thresh_15 = prctile(reward_onset_lick_rate2, 15);
 if ~strcmpi(ops.trial_ctx_type, 'quiet')

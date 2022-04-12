@@ -7,10 +7,10 @@ LED_on = 3; %foltage. if diameter of light circle is 1mm, then use 1.5.
 if synch
     pause((pause_time - 1)/2);
     volt_cmd(2) = LED_on;
-    session.outputSingleScan(volt_cmd);
+    f_write_daq_out(session, volt_cmd, old_daq);
     pause(1);
     volt_cmd(2) = 0;
-    session.outputSingleScan(volt_cmd);
+    f_write_daq_out(session, volt_cmd, old_daq);
     pause((pause_time - 1)/2);
 else
     pause(pause_time);

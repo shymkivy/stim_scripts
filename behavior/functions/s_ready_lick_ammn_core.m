@@ -1,8 +1,13 @@
 %%
-pwd2 = fileparts(which('ready_lick_ammn.m'));
 
-addpath([pwd2 '\..\auditory_stim\functions']);
-save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
+pwd1 = mfilename('fullpath');
+if isempty(pwd1)
+    pwd1 = pwd;
+    %pwd1 = fileparts(which('ready_lick_ammn.m'));
+end
+
+addpath([pwd1 '\..\auditory_stim\functions']);
+save_path = [pwd1 '\..\..\stim_scripts_output\behavior\'];
 %circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 %circuit_file_name = 'sine_mod_play_YS.rcx';
 %% Initialize arduino
@@ -118,7 +123,7 @@ n_trial = 0;
 while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
     % wait for animal to stop licking for some time
     while (now*86400 - last_lick_high_time)<ops.initial_stop_lick_period
-        data_in = f_read_daq_out(session, old_daq);
+        data_in = f_read_daq_out(session, ops.old_daq);
         s_get_lick_state;
     end
     

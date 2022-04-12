@@ -148,119 +148,162 @@ end
 %%
 
 pause(5);
-f_write_daq_out(session, [0,3,0,0], old_daq);
-start_paradigm = now*86400;
+f_write_daq_out(session, [0,3,0,0], ops.old_daq);
+state.start_paradigm = now*86400;
 pause(1);
-f_write_daq_out(session, [0,0,0,0], old_daq);
+f_write_daq_out(session, [0,0,0,0], ops.old_daq);
 pause(5);
 
 %%
-time_trial_start = zeros(ops.trial_cap, 1);
-time_reward_period_start = zeros(ops.trial_cap, 1);
-time_correct_lick = zeros(ops.trial_cap, 1);
-time_stim = cell(ops.trial_cap,1);
-reward_onset_num_licks = zeros(ops.trial_cap, 1);
-reward_type = zeros(ops.trial_cap, 1);
-reward_onset_lick_rate = zeros(ops.trial_cap, 1);
+data.time_trial_start = zeros(ops.trial_cap, 1);
+data.time_reward_period_start = zeros(ops.trial_cap, 1);
+data.time_reward_period_end = zeros(ops.trial_cap, 1);
+data.time_correct_lick = zeros(ops.trial_cap, 1);
+data.time_reward = zeros(ops.trial_cap, 1);
+data.time_stim = cell(ops.trial_cap,1);
+data.reward_onset_num_licks = zeros(ops.trial_cap, 1);
+data.reward_type = zeros(ops.trial_cap, 1);
+data.reward_onset_lick_rate = zeros(ops.trial_cap, 1);
+data.time_lick_on = zeros(ops.trial_cap*50,1);
+data.time_lick_off = zeros(ops.trial_cap*50,1);
 
-n_lick_on = 0;             % record all lick times
-n_lick_off = 0;
-last_lick_low_time = now*86400;
-last_lick_high_time = now*86400;
-last_lick_state = 0;
-time_lick_on = zeros(ops.trial_cap*50,1);
-time_lick_off = zeros(ops.trial_cap*50,1);
-lick_transition = 0;
+state.n_lick_on = 0;             % record all lick times
+state.n_lick_off = 0;
+state.last_lick_low_time = now*86400;
+state.last_lick_high_time = now*86400;
+state.last_lick_state = 0;
+state.lick_transition = 0;
+state.num_trial_licks = 0;
+state.last_volt = 0;
+state.start_reward = - 500;
+state.end_reward = - 500;
+state.n_trial = 0;  
 
-num_trial_licks = 0;
-last_volt = 0;
-start_reward_period = -500;
-n_trial = 0;  
-while and((now*86400 - start_paradigm)<ops.paradigm_duration, n_trial<ops.trial_cap)
+while and((now*86400 - start_paradigm)<ops.paradigm_duration, state.n_trial<ops.trial_cap)
     % wait for animal to stop licking for some time before trial can start
     while (now*86400 - last_lick_high_time)<ops.initial_stop_lick_period
-        data_in = f_read_daq_out(session, old_daq);
-        s_get_lick_state;
+        data_in = f_read_daq_out(session, ops.old_daq);
+        [state, data] = f_get_lick_state(data_in, state, data, ops);
     end
-    
-    
     
     % at this point trial is available, wait for lick to start
     if ops.lick_to_start_trial
         % turn on LED bh (hevavior)
-        f_write_daq_out(session, [0,0,1,0], old_daq);
-        while and(lick_transition<1, (now*86400 - start_paradigm)<ops.paradigm_duration)
-            data_in = f_read_daq_out(session, old_daq);
-            s_get_lick_state;
+        f_write_daq_out(session, [0,0,1,0], ops.old_daq);
+        while and(lick_transition<1, (now*86400 - state.start_paradigm)<ops.paradigm_duration)
+            data_in = f_read_daq_out(session, ops.old_daq);
+            [state, data] = f_get_lick_state(data_in, state, data, ops);
         end
         % turn of LED bh
-        f_write_daq_out(session, [0,0,0,0], old_daq);
+        f_write_daq_out(session, [0,0,0,0], ops.old_daq);
     end
     
    
-    if or(lick_transition>0, ~ops.lick_to_start_trial) % if there was lick new trial
-        n_trial = n_trial + 1;
+    if or(state.lick_transition>0, ~ops.lick_to_start_trial) % if there was lick new trial
+        state.n_trial = state.n_trial + 1;
         start_trial = now*86400;
-        time_trial_start(n_trial) = start_trial - start_paradigm;
-
+        data.time_trial_start(state.n_trial) = start_trial - state.start_paradigm;
+        
+        % pretrial delay
         trial_delay = ops.pre_trial_delay+ops.pre_trial_delay_rand*rand(1);
-        pause(trial_delay);
+        while (now*86400 - start_trial) < trial_delay
+            data_in = f_read_daq_out(session, ops.old_daq);
+            [state, data] = f_get_lick_state(data_in, state, data, ops);
+        end
         
+        % reset state
         stim_finish = 0;
-        num_trial_licks = 0;
-        % maybe add lick times here
-        
-        
+        state.num_trial_licks = 0;
         if strcmpi(ops.trial_ctx_type, 'quiet')
-            while (now*86400 - start_trial - trial_delay) < dev_times(n_trial)
-                data_in = f_read_daq_out(session, old_daq);
-                s_get_lick_state;
+            
+            % wait until time of tone
+            while (now*86400 - start_trial - trial_delay) < dev_times(state.n_trial)
+                data_in = f_read_daq_out(session, ops.old_daq);
+                [state, data] = f_get_lick_state(data_in, state, data, ops);
             end
             
-            stim_type = dev_seq(n_trial); 
+            stim_type = dev_seq(state.n_trial); 
             reward_trial = 1;
-            volt_stim = stim_type/ops.num_freqs*4;
+            state.volt_stim = stim_type/ops.num_freqs*4;
             
-            s_run_tone;
+            f_pre_reward_flash(reward_trial, session, ops);
             
-            % pause for remainder of reward period                
-            start_reward = start_stim;
-            reward_duration = ops.reward_window;
-            s_run_reward_period;
+            state.start_stim = now*86400;%GetSecs();
+
+            if reward_trial
+                state.trial_lick_rate = state.num_trial_licks/(now*86400 - start_trial);
+                if ops.lick_to_get_reward
+                    start_reward = state.start_stim;
+                    end_reward = start_reward + ops.reward_window;
+                end
+            end
             
-            time_stim{n_trial} = start_stim-start_paradigm;
+            [state, data] = f_run_tone(state, data, ops, RP, session, all_tones);
             
+            % wait for reward window to end  
+            state.end_pause = max([end_reward, state.start_stim + ops.stim_time]);
+            [state, data] = f_run_reward_pause(state, data, ops, session);
+            
+            % gather info
+            data.time_stim{state.n_trial} = state.start_stim-state.start_paradigm;
+            if reward_trial
+                data.reward_onset_num_licks(state.n_trial) = num_trial_licks;
+                data.reward_onset_lick_rate(state.n_trial) = trial_lick_rate;
+                if ops.lick_to_get_reward
+                    data.time_reward_period_start(state.n_trial) = start_reward - state.start_paradigm;
+                    data.time_reward_period_end(state.n_trial) = end_reward - state.start_paradigm;
+                end
+            end
         else
-            num_stim = dev_idx(n_trial)+ops.red_num_post_trial;
-            time_stim{n_trial} = zeros(num_stim,1);
-            n_stim = 1;
+            num_stim = dev_idx(state.n_trial)+ops.red_num_post_trial;
+            data.time_stim{state.n_trial} = zeros(num_stim,1);
+            state.n_stim = 1;
 
             % start stim
-            while and(~stim_finish, n_stim<=num_stim)
+            while and(~stim_finish, state.n_stim<=num_stim)
 
-                if n_stim == dev_idx(n_trial)
-                    stim_type = dev_seq(n_trial); 
+                if state.n_stim == dev_idx(state.n_trial)
+                    stim_type = dev_seq(state.n_trial); 
                     reward_trial = 1;
                 else
-                    stim_type = ctx_seq{n_trial}(n_stim);
+                    stim_type = ctx_seq{state.n_trial}(state.n_stim);
                     reward_trial = 0;
                 end
-                volt_stim = stim_type/ops.num_freqs*4;
+                state.volt_stim = stim_type/ops.num_freqs*4;
                 
-                s_run_tone;
-                
-                % pause for isi                
-                start_reward = now*86400;
-                reward_duration = ops.isi_time+rand(1)*ops.rand_time_pad;
-                
-                s_run_reward_period;
+                f_pre_reward_flash(reward_trial, session, ops);
+            
+                state.start_stim = now*86400;%GetSecs();
 
+                if reward_trial
+                    state.trial_lick_rate = state.num_trial_licks/(now*86400 - start_trial);
+                    if ops.lick_to_get_reward
+                        start_reward = state.start_stim;
+                        end_reward = start_reward + ops.reward_window;
+                    end
+                end
+                
+                [state, data] = f_run_tone(state, data, ops, RP, session, all_tones);
+                
+                % pause for isi    
+                state.end_pause = state.start_stim + ops.stim_time + ops.isi_time+rand(1)*ops.rand_time_pad;
+                [state, data] = f_run_reward_pause(state, data, ops, session);
+            
                 % finish
-                time_stim{n_trial}(n_stim) = start_stim-start_paradigm;
-                n_stim = n_stim  + 1;
+                data.time_stim{state.n_trial}(state.n_stim) = state.start_stim-state.start_paradigm;
+                if reward_trial
+                    data.reward_onset_num_licks(state.n_trial) = state.num_trial_licks;
+                    data.reward_onset_lick_rate(state.n_trial) = state.trial_lick_rate;
+                    if ops.lick_to_get_reward
+                        data.time_reward_period_start(state.n_trial) = start_reward - state.start_paradigm;
+                        data.time_reward_period_end(state.n_trial) = end_reward - state.start_paradigm;
+                    end
+                end
+                
+                state.n_stim = state.n_stim  + 1;
             end
         end
-        fprintf('Trials=%d; correct licks=%d; lick rate=%.2f; reward type=%d; high=%d low=%d none=%d\n', n_trial, sum(reward_type>0), reward_onset_lick_rate(n_trial), reward_type(n_trial), sum(reward_type==3),sum(reward_type==2) ,sum(reward_type==1));
+        fprintf('Trials=%d; correct licks=%d; lick rate=%.2f; reward type=%d; high=%d low=%d none=%d\n', state.n_trial, sum(data.reward_type>0), data.reward_onset_lick_rate(state.n_trial), data.reward_type(state.n_trial), sum(data.reward_type==3),sum(data.reward_type==2) ,sum(data.reward_type==1));
     end
     
     pause(ops.post_trial_delay);
