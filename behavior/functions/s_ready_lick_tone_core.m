@@ -1,8 +1,11 @@
 %%
-pwd2 = fileparts(which('ready_lick_ammn.m'));
-
-addpath([pwd2 '\..\auditory_stim\functions']);
-save_path = [pwd2 '\..\..\stim_scripts_output\behavior\'];
+% pwd1 = mfilename('fullpath');
+% if isempty(pwd1)
+%     pwd1 = pwd;
+%     %pwd1 = fileparts(which('ready_lick_ammn.m'));
+% end
+addpath([pwd1 '\..\auditory_stim\functions']);
+save_path = [pwd1 '\..\..\stim_scripts_output\behavior\'];
 
 %% design stim,  generate control frequencies
 if strcmpi(ops.freq_scale, 'log')
@@ -16,6 +19,8 @@ elseif strcmpi(ops.freq_scale, 'linear')
     control_carrier_freq = linspace(ops.start_freq, ops.end_freq, ops.num_freqs);
 end
 
+stim_data.control_carrier_freq = control_carrier_freq;
+
 
 %% design stim types sequence
 % 'quiet' has variable quiet period followed by one of the devs
@@ -25,11 +30,12 @@ if numel(ops.dev_tone_list) == 1
 else
     dev_seq = randsample(ops.dev_tone_list, ops.trial_cap, 1); 
 end
-
+stim_data.dev_seq = dev_seq;
 
 if strcmpi(ops.trial_ctx_type, 'quiet')
     % get dev trial time
     dev_times = rand(ops.trial_cap,1)*(ops.quiet_dev_delay_range(2)-ops.quiet_dev_delay_range(1))+ops.quiet_dev_delay_range(1);
+    stim_data.dev_times = dev_times;
 else
     ctx_seq = cell(ops.trial_cap,1);
     % get dev trial index
@@ -56,7 +62,12 @@ else
     elseif strcmpi(ops.trial_ctx_type, 'control')
         
     end
+    
+    stim_data.dev_idx = dev_idx;
+    stim_data.ctx_seq = ctx_seq;
 end
+
+
 % 
 % 
 % % stim types
@@ -85,35 +96,35 @@ end
 %figure; histogram(dev_idx);
 
 %% initialize DAQ
-if old_daq
+if ops.old_daq
     session=daq.createSession('ni');
-    session.addAnalogInputChannel(daq_dev,'ai0','Voltage');
+    session.addAnalogInputChannel(ops.daq_dev,'ai0','Voltage');
     session.Channels(1).Range = [-10 10];
     session.Channels(1).TerminalConfig = 'SingleEnded';
-    session.addAnalogOutputChannel(daq_dev,'ao0','Voltage');
-    session.addAnalogOutputChannel(daq_dev,'ao1','Voltage');
-    session.addDigitalChannel(daq_dev,'Port0/Line0','OutputOnly');
-    session.addDigitalChannel(daq_dev,'Port0/Line1','OutputOnly'); % Reward
+    session.addAnalogOutputChannel(ops.daq_dev,'ao0','Voltage');
+    session.addAnalogOutputChannel(ops.daq_dev,'ao1','Voltage');
+    session.addDigitalChannel(ops.daq_dev,'Port0/Line0','OutputOnly');
+    session.addDigitalChannel(ops.daq_dev,'Port0/Line1','OutputOnly'); % Reward
 else
     session=daq('ni');
-    session.addinput(daq_dev,'ai0','Voltage'); % record licks from sensor
+    session.addinput(ops.daq_dev,'ai0','Voltage'); % record licks from sensor
     session.Channels(1).Range = [-10 10];
     session.Channels(1).TerminalConfig = 'SingleEnded';
-    session.addoutput(daq_dev,'ao0','Voltage'); % Stim type
-    session.addoutput(daq_dev,'ao1','Voltage'); % LED
-    session.addoutput(daq_dev,'Port0/Line0','Digital'); % LEDbh
-    session.addoutput(daq_dev,'Port0/Line1','Digital'); % Reward
+    session.addoutput(ops.daq_dev,'ao0','Voltage'); % Stim type
+    session.addoutput(ops.daq_dev,'ao1','Voltage'); % LED
+    session.addoutput(ops.daq_dev,'Port0/Line0','Digital'); % LEDbh
+    session.addoutput(ops.daq_dev,'Port0/Line1','Digital'); % Reward
 end
-f_write_daq_out(session, [0,0,0,0], old_daq);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+f_write_daq_out(session, [0,0,0,0], ops.old_daq);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 % start with some water
-f_write_daq_out(session, [0,0,0,1], old_daq); % write(arduino_port, 3, 'uint8');
+f_write_daq_out(session, [0,0,0,1], ops.old_daq); % write(arduino_port, 3, 'uint8');
 pause(ops.water_dispense_duration_large);
-f_write_daq_out(session, [0,0,0,0], old_daq);
+f_write_daq_out(session, [0,0,0,0], ops.old_daq);
 %% initialize RZ6
 
 if ops.sound_TD_amp
-    circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
+    circuit_path = [pwd1 '\..\RPvdsEx_circuits\'];
     circuit_file_name = 'sine_mod_play_YS.rcx';
 
     RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
@@ -139,6 +150,8 @@ if ~ops.sound_TD_amp
         all_tones(n_fr,:) = sin(tone_x*control_carrier_freq(n_fr)*2*pi);
     end
     ops.Fs = Fs;
+    
+    stim_data.all_tones = all_tones;
     % figure; plot(train_tone)
     % tic
     % sound(train_tone, Fs)
@@ -179,9 +192,9 @@ state.start_reward = - 500;
 state.end_reward = - 500;
 state.n_trial = 0;  
 
-while and((now*86400 - start_paradigm)<ops.paradigm_duration, state.n_trial<ops.trial_cap)
+while and((now*86400 - state.start_paradigm)<ops.paradigm_duration, state.n_trial<ops.trial_cap)
     % wait for animal to stop licking for some time before trial can start
-    while (now*86400 - last_lick_high_time)<ops.initial_stop_lick_period
+    while (now*86400 - state.last_lick_high_time)<ops.initial_stop_lick_period
         data_in = f_read_daq_out(session, ops.old_daq);
         [state, data] = f_get_lick_state(data_in, state, data, ops);
     end
@@ -222,36 +235,36 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, state.n_trial<ops.
                 [state, data] = f_get_lick_state(data_in, state, data, ops);
             end
             
-            stim_type = dev_seq(state.n_trial); 
-            reward_trial = 1;
-            state.volt_stim = stim_type/ops.num_freqs*4;
+            state.stim_type = dev_seq(state.n_trial); 
+            state.reward_trial = 1;
+            state.volt_stim = state.stim_type/ops.num_freqs*4;
             
-            f_pre_reward_flash(reward_trial, session, ops);
+            f_pre_reward_flash(state.reward_trial, session, ops);
             
             state.start_stim = now*86400;%GetSecs();
 
-            if reward_trial
+            if state.reward_trial
                 state.trial_lick_rate = state.num_trial_licks/(now*86400 - start_trial);
                 if ops.lick_to_get_reward
-                    start_reward = state.start_stim;
-                    end_reward = start_reward + ops.reward_window;
+                    state.start_reward = state.start_stim;
+                    state.end_reward = state.start_reward + ops.reward_window;
                 end
             end
             
-            [state, data] = f_run_tone(state, data, ops, RP, session, all_tones);
+            [state, data] = f_run_tone(state, data, ops, RP, session, stim_data);
             
             % wait for reward window to end  
-            state.end_pause = max([end_reward, state.start_stim + ops.stim_time]);
+            state.end_pause = max([state.end_reward, state.start_stim + ops.stim_time]);
             [state, data] = f_run_reward_pause(state, data, ops, session);
             
             % gather info
             data.time_stim{state.n_trial} = state.start_stim-state.start_paradigm;
-            if reward_trial
-                data.reward_onset_num_licks(state.n_trial) = num_trial_licks;
-                data.reward_onset_lick_rate(state.n_trial) = trial_lick_rate;
+            if state.reward_trial
+                data.reward_onset_num_licks(state.n_trial) = state.num_trial_licks;
+                data.reward_onset_lick_rate(state.n_trial) = state.trial_lick_rate;
                 if ops.lick_to_get_reward
-                    data.time_reward_period_start(state.n_trial) = start_reward - state.start_paradigm;
-                    data.time_reward_period_end(state.n_trial) = end_reward - state.start_paradigm;
+                    data.time_reward_period_start(state.n_trial) = state.start_reward - state.start_paradigm;
+                    data.time_reward_period_end(state.n_trial) = state.end_reward - state.start_paradigm;
                 end
             end
         else
@@ -263,23 +276,23 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, state.n_trial<ops.
             while and(~stim_finish, state.n_stim<=num_stim)
 
                 if state.n_stim == dev_idx(state.n_trial)
-                    stim_type = dev_seq(state.n_trial); 
-                    reward_trial = 1;
+                    state.stim_type = stim_data.dev_seq(state.n_trial); 
+                    state.reward_trial = 1;
                 else
-                    stim_type = ctx_seq{state.n_trial}(state.n_stim);
-                    reward_trial = 0;
+                    state.stim_type = stim_data.ctx_seq{state.n_trial}(state.n_stim);
+                    state.reward_trial = 0;
                 end
-                state.volt_stim = stim_type/ops.num_freqs*4;
+                state.volt_stim = state.stim_type/ops.num_freqs*4;
                 
-                f_pre_reward_flash(reward_trial, session, ops);
+                f_pre_reward_flash(state.reward_trial, session, ops);
             
                 state.start_stim = now*86400;%GetSecs();
 
-                if reward_trial
+                if state.reward_trial
                     state.trial_lick_rate = state.num_trial_licks/(now*86400 - start_trial);
                     if ops.lick_to_get_reward
-                        start_reward = state.start_stim;
-                        end_reward = start_reward + ops.reward_window;
+                        state.start_reward = state.start_stim;
+                        state.end_reward = state.start_reward + ops.reward_window;
                     end
                 end
                 
@@ -291,12 +304,12 @@ while and((now*86400 - start_paradigm)<ops.paradigm_duration, state.n_trial<ops.
             
                 % finish
                 data.time_stim{state.n_trial}(state.n_stim) = state.start_stim-state.start_paradigm;
-                if reward_trial
+                if state.reward_trial
                     data.reward_onset_num_licks(state.n_trial) = state.num_trial_licks;
                     data.reward_onset_lick_rate(state.n_trial) = state.trial_lick_rate;
                     if ops.lick_to_get_reward
-                        data.time_reward_period_start(state.n_trial) = start_reward - state.start_paradigm;
-                        data.time_reward_period_end(state.n_trial) = end_reward - state.start_paradigm;
+                        data.time_reward_period_start(state.n_trial) = state.start_reward - state.start_paradigm;
+                        data.time_reward_period_end(state.n_trial) = state.end_reward - state.start_paradigm;
                     end
                 end
                 

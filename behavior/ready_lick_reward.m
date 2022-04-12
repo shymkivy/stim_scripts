@@ -9,7 +9,12 @@
 %       pretrial rand delay = 4;
 %       posttrial delay = 5
 clear;
-addpath([pwd '\functions'])
+pwd1 = fileparts(mfilename('fullpath'));
+if isempty(pwd1)
+    pwd1 = pwd;
+    %pwd1 = fileparts(which('ready_lick_ammn.m'));
+end
+addpath([pwd1 '\functions'])
 %% params
 fname = 'mouseR_exp3';
 
@@ -25,7 +30,7 @@ ops.post_trial_delay = 3;  % sec
 ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
-ops.water_dispense_duration = .02; % or .2 for more trials  
+ops.water_dispense_duration = 5%.02; % or .2 for more trials  
 ops.old_daq = 1;
 ops.daq_dev = 'Dev1';
 
@@ -113,12 +118,12 @@ while and((now*86400 - state.start_paradigm)<ops.paradigm_duration, state.n_rewa
             f_write_daq_out(session, [0,0,0,0], ops.old_daq); %write(arduino_port, 2, 'uint8'); % turn off LED
         end
         state.reward_period_start = now*86400;
-        data.time_reward_period_start(n_trial) = state.reward_period_start - state.start_paradigm;
+        data.time_reward_period_start(state.n_trial) = state.reward_period_start - state.start_paradigm;
         while and(~state.lick, (now*86400 - state.reward_period_start)<(ops.reward_window))
             data_in = f_read_daq_out(session, ops.old_daq);
             if data_in > ops.lick_thresh
                 state.lick = 1;
-                data.time_correct_lick(n_trial) = now*86400 - state.start_paradigm;
+                data.time_correct_lick(state.n_trial) = now*86400 - state.start_paradigm;
             end
         end
         
@@ -130,7 +135,7 @@ while and((now*86400 - state.start_paradigm)<ops.paradigm_duration, state.n_rewa
         else
             pause(ops.failure_timeout);
         end
-        fprintf('n_trial = %d, n_reward = %d\n', n_trial, state.n_reward);
+        fprintf('n_trial = %d, n_reward = %d\n', state.n_trial, state.n_reward);
     end
     pause(ops.post_trial_delay);
 end

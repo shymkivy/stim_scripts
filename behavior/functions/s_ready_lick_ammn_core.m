@@ -14,8 +14,8 @@ save_path = [pwd1 '\..\..\stim_scripts_output\behavior\'];
 %arduino_port=serialport('COM19',9600);
 
 %% initialize RZ6
-% RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
-% RP.Halt;
+RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
+RP.Halt;
 
 %% initialize DAQ
 
@@ -93,7 +93,7 @@ RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 pause(5);
 f_write_daq_out(session, [0,3,0,0], old_daq);
-start_paradigm = now*86400;
+state.start_paradigm = now*86400;
 pause(1);
 f_write_daq_out(session, [0,0,0,0], old_daq);
 pause(5);

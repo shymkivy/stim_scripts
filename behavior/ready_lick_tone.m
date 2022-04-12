@@ -5,7 +5,7 @@
 % no arduino script required, only as power source
 clear;
 
-pwd1 = mfilename('fullpath');
+pwd1 = fileparts(mfilename('fullpath'));
 if isempty(pwd1)
     pwd1 = pwd;
     %pwd1 = fileparts(which('ready_lick_ammn.m'));
@@ -13,10 +13,10 @@ end
 addpath([pwd1 '\functions'])
 %% params
 
-fname = 'mouseR_exp3';
+fname = 'mouseL_exp2';
 
 
-ops.paradigm_duration = 1200;  %  sec
+ops.paradigm_duration = 1800;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 % ------- trial bout params -----------
@@ -39,10 +39,8 @@ ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh giv
 
 % cont and mmn are dev trials fit among other trials
 % quiet is dev trial coming in some time range
-daq_dev = 'Dev1';
-old_daq = 1;
-ops.daq_dev = daq_dev;
-ops.old_daq = old_daq;
+ops.daq_dev = 'Dev1';
+ops.old_daq = 1;
 
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
@@ -87,10 +85,6 @@ ops.transition_thresh = 4;
 % ----- TD amplifier params-----
 ops.base_freq = 0.001; % baseline frequecy
 ops.modulation_amp = 3;
-
-%%
-ops.LED_bh
-
 
 %% Run script
 %s_ready_lick_ammn_core;

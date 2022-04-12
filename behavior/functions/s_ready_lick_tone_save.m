@@ -14,15 +14,16 @@ pause(5);
 
 %% collect data
 %trial_data.mmn_red_dev_seq = mmn_red_dev_seq;
-trial_data.start_paradigm = state.start_paradigm;
 trial_data = data;
+trial_data.start_paradigm = state.start_paradigm;
+trial_data.stim_data = stim_data;
 if strcmpi(ops.trial_ctx_type, 'quiet')
     trial_data.dev_times = dev_times;
 else
     trial_data.dev_idx = dev_idx;
 end
-trial_data.num_trials = n_trial;
-trial_data.time_lick = time_lick_on(time_lick_on>0);
+trial_data.num_trials = state.n_trial;
+trial_data.time_lick = data.time_lick_on(data.time_lick_on>0);
 trial_data.time_paradigm_end = time_paradigm_end;
 
 temp_time = clock;
@@ -33,7 +34,7 @@ end
 save([save_path file_name],  'trial_data', 'ops');
 
 %% plot
-reward_onset_lick_rate2 = data.reward_onset_lick_rate(reward_type>0);
+reward_onset_lick_rate2 = data.reward_onset_lick_rate(data.reward_type>0);
 full_thresh_50 = prctile(reward_onset_lick_rate2, 50);
 full_thresh_15 = prctile(reward_onset_lick_rate2, 15);
 if ~strcmpi(ops.trial_ctx_type, 'quiet')

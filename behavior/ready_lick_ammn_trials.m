@@ -1,7 +1,7 @@
 % communicates with the "minimal" arduino script
 clear;
 
-pwd1 = mfilename('fullpath');
+pwd1 = fileparts(mfilename('fullpath'));
 if isempty(pwd1)
     pwd1 = pwd;
     %pwd1 = fileparts(which('ready_lick_ammn.m'));
@@ -68,7 +68,6 @@ ops.modulation_amp = 3;
 
 %% Run script
 s_ready_lick_ammn_core;
-
 
 %%
 s_ready_lick_ammn_save;
