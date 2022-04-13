@@ -42,12 +42,12 @@ ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh giv
 ops.daq_dev = 'Dev1';
 ops.old_daq = 1;
 
+ops.sound_TD_amp = 1;
+
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
 ops.rand_time_pad = .025;
-
-ops.sound_TD_amp = 1;
 
 % ----- auditory stim params ------------
 ops.start_freq = 1000;

@@ -142,7 +142,6 @@ end
 %%
 % chreate tone trace
 if ~ops.sound_TD_amp
-    
     Fs = 32768; %HZ
     tone_x = 1/Fs:1/Fs:ops.stim_time;
     all_tones = zeros(ops.num_freqs, numel(tone_x));

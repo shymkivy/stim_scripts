@@ -31,8 +31,10 @@ ops.reward_lick_rate_thersh_small = 1.6;        % licks per sec below thresh giv
 
 ops.lick_thresh = 4;
 
-daq_dev = 'Dev1';
-old_daq = 1;
+ops.daq_dev = 'Dev1';
+ops.old_daq = 1;
+
+ops.sound_TD_amp = 1;
 
 ops.stim_selection_type = 'randsamp'; % 'randsamp', 'sequences', 'rand_sequences' 
 ops.MMN_pat = [6, 3; 3, 6];
