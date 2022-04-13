@@ -13,7 +13,7 @@ end
 addpath([pwd1 '\functions'])
 %% params
 
-fname = 'mouseL_exp2';
+fname = 'mouseR_exp3';
 
 
 ops.paradigm_duration = 1800;  %  sec
