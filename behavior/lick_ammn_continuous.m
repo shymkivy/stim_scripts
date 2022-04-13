@@ -1,11 +1,9 @@
-%% audio MMN with licking to given tone
+%% audio MMN tones script
+%
+%   last update: 1/22/20
+%
+%%
 clear;
-
-pwd1 = mfilename('fullpath');
-if isempty(pwd1)
-    pwd1 = pwd;
-    %pwd1 = fileparts(which('lick_ammn_contin.m'));
-end
 
 %% parameters
 % ------ Stim params ------
@@ -25,6 +23,10 @@ ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1];
 % ------ Other ------
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 
+ops.old_daq = 1;
+ops.daq_dev = 'Dev1';
+ops.sound_TD_amp = 1;
+
 % ----- auditory stim params ------------
 ops.start_freq = 2000;
 ops.end_freq = 90000;
@@ -36,25 +38,29 @@ ops.MMN_patterns = [3,6; 4,7; 3,8];
 ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 4; % maybe use 2
 
-daq_dev = 'Dev1';
-old_daq = 1;
-
 %% predicted run time
 run_time = (ops.stim_time+ops.isi_time+0.025)*(sum(ops.paradigm_trial_num)) + (numel(ops.paradigm_trial_num)-1)*ops.inter_paradigm_pause_time + 20 + 120;
 fprintf('Expected run duration: %.1fmin (%.fsec)\n',run_time/60,run_time);
 
 % mag = sqrt(angsy.^2 + angsx.^2);
 %%
-%pwd2 = fileparts(which('audio_MMN_tones2.m')); %mfilename
-addpath([pwd1 '\functions'])
+pwd1 = fileparts(mfilename('fullpath'));
+if isempty(pwd1)
+    pwd1 = pwd;
+    %pwd1 = fileparts(which('ready_lick_ammn.m'));
+end
+
+addpath([pwd1 '\functions']);
 addpath([pwd1 '\..\auditory_stim\functions']);
 save_path = [pwd1 '\..\..\stim_scripts_output\auditory\'];
 circuit_path = [pwd1 '\..\RPvdsEx_circuits\'];
 circuit_file_name = 'sine_mod_play_YS.rcx';
 
 temp_time = clock;
-file_name = sprintf('lick_ammn_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('ammn_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
+
+
 %% compute stim types sequence
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
 stim_ang = cell(numel(ops.paradigm_sequence),1);
@@ -92,8 +98,14 @@ for n_pr = 1:numel(ops.paradigm_sequence)
 end
 
 %% initialize RZ6
-RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
-RP.Halt;
+
+if ops.sound_TD_amp
+    circuit_path = [pwd1 '\..\RPvdsEx_circuits\'];
+    circuit_file_name = 'sine_mod_play_YS.rcx';
+
+    RP = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
+    RP.Halt;
+end
 
 %% design stim
 % generate control frequencies
@@ -105,40 +117,41 @@ end
 
 %% initialize DAQ
 
-
-if old_daq
+if ops.old_daq
     session=daq.createSession('ni');
-    session.addAnalogInputChannel(daq_dev,'ai0','Voltage');
+    session.addAnalogInputChannel(ops.daq_dev,'ai0','Voltage');
     session.Channels(1).Range = [-10 10];
     session.Channels(1).TerminalConfig = 'SingleEnded';
-    session.addAnalogOutputChannel(daq_dev,'ao0','Voltage');
-    session.addAnalogOutputChannel(daq_dev,'ao1','Voltage');
-    session.addDigitalChannel(daq_dev,'Port0/Line0','OutputOnly');
-    session.addDigitalChannel(daq_dev,'Port0/Line1','OutputOnly'); % Reward
+    session.addAnalogOutputChannel(ops.daq_dev,'ao0','Voltage');
+    session.addAnalogOutputChannel(ops.daq_dev,'ao1','Voltage');
+    session.addDigitalChannel(ops.daq_dev,'Port0/Line0','OutputOnly');
+    session.addDigitalChannel(ops.daq_dev,'Port0/Line1','OutputOnly'); % Reward
 else
     session=daq('ni');
-    session.addinput(daq_dev,'ai0','Voltage'); % record licks from sensor
+    session.addinput(ops.daq_dev,'ai0','Voltage'); % record licks from sensor
     session.Channels(1).Range = [-10 10];
     session.Channels(1).TerminalConfig = 'SingleEnded';
-    session.addoutput(daq_dev,'ao0','Voltage'); % Stim type
-    session.addoutput(daq_dev,'ao1','Voltage'); % LED
-    session.addoutput(daq_dev,'Port0/Line0','Digital'); % LEDbh
-    session.addoutput(daq_dev,'Port0/Line1','Digital'); % Reward
+    session.addoutput(ops.daq_dev,'ao0','Voltage'); % Stim type
+    session.addoutput(ops.daq_dev,'ao1','Voltage'); % LED
+    session.addoutput(ops.daq_dev,'Port0/Line0','Digital'); % LEDbh
+    session.addoutput(ops.daq_dev,'Port0/Line1','Digital'); % Reward
 end
-f_write_daq_out(session, [0,0,0,0], old_daq);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
+f_write_daq_out(session, [0,0,0,0], ops.old_daq);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 % start with some water
-f_write_daq_out(session, [0,0,0,1], old_daq); % write(arduino_port, 3, 'uint8');
+f_write_daq_out(session, [0,0,0,1], ops.old_daq); % write(arduino_port, 3, 'uint8');
 pause(ops.water_dispense_duration_large);
-f_write_daq_out(session, [0,0,0,0], old_daq);
+f_write_daq_out(session, [0,0,0,0], ops.old_daq);
 
 %% Run trials
-RP.Run;
-RP.SetTagVal('ModulationAmp', ops.modulation_amp);
+if ops.sound_TD_amp
+    RP.Run;
+    RP.SetTagVal('ModulationAmp', ops.modulation_amp);
+end
 
 start_paradigm=now*86400;%GetSecs();
 
-f_pause_synch(10, session, ops.synch_pulse, [0,0,0,0]);
+f_pause_synch(10, session, ops.synch_pulse, volt_cmd);
 stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
 for n_pr = 1:numel(ops.paradigm_sequence)
@@ -170,12 +183,14 @@ for n_pr = 1:numel(ops.paradigm_sequence)
         % play
         start_stim = now*86400;%GetSecs();
         RP.SetTagVal('CarrierFreq', control_carrier_freq(ang));
-        f_write_daq_out(session, [vis_volt,0,0,0], old_daq);
-        f_write_daq_out(session, [vis_volt,0,0,0], old_daq);
+        volt_cmd(1) = vis_volt;
+        session.outputSingleScan(volt_cmd);
+        session.outputSingleScan(volt_cmd);
         pause(ops.stim_time);
         RP.SetTagVal('CarrierFreq', ops.base_freq);
-        f_write_daq_out(session, [0,0,0,0], old_daq);
-        f_write_daq_out(session, [0,0,0,0], old_daq);
+        volt_cmd(1) = 0;
+        session.outputSingleScan(volt_cmd);
+        session.outputSingleScan(volt_cmd);
         
         
         % record
@@ -184,17 +199,18 @@ for n_pr = 1:numel(ops.paradigm_sequence)
     end
     
     if n_pr < numel(ops.paradigm_sequence)
-        f_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse, [0 0 0 0]);
+        f_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse, volt_cmd);
     end
     
 end
 close(h);
 
 %%
-f_pause_synch(10, session, ops.synch_pulse, [0,0,0,0])
+f_pause_synch(10, session, ops.synch_pulse, volt_cmd)
 
 %% close all
-f_write_daq_out(session, [0,0,0,0], old_daq);
+volt_cmd(1:end) = 0;
+session.outputSingleScan(volt_cmd);
 RP.Halt;
 
 %% save info
