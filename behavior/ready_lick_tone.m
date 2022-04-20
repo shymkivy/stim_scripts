@@ -13,10 +13,10 @@ end
 addpath([pwd1 '\functions'])
 %% params
 
-fname = 'mouseR_exp3';
+fname = 'mouseR_exp2_imaging';
 
 
-ops.paradigm_duration = 1800;  %  sec
+ops.paradigm_duration = 1730;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 % ------- trial bout params -----------
@@ -41,6 +41,11 @@ ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh giv
 % quiet is dev trial coming in some time range
 ops.daq_dev = 'Dev1';
 ops.old_daq = 1;
+ops.volt_cmd = [0, 0, 0, 0];
+ops.stim_chan = 1;
+ops.LED_chan = 2;
+ops.LED_bh_chan = 3;
+ops.reward_chan = 4;
 
 ops.sound_TD_amp = 1;
 

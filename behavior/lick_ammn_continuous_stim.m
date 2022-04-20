@@ -11,12 +11,12 @@ ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
 % ------ Paradigm sequence ------
 ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
-ops.paradigm_trial_num = [800, 1200, 1200];                   % how many trials for each paradigm
+ops.paradigm_trial_num = [400 800 800];%[800, 1200, 1200];                   % how many trials for each paradigm
 ops.paradigm_MMN_pattern = [0,3, 3];                       % which patterns for MMN/flip (controls are ignored)
                                                             % 1= horz/vert; 2= 45deg;
 % ------ MMN params ------
 ops.initial_red_num = 20;                                   % how many redundants to start with
-ops.inter_paradigm_pause_time = 60;                         % how long to pause between paragigms
+ops.inter_paradigm_pause_time = 60;  % 60                       % how long to pause between paragigms
 ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1]; 
 
 % ----- stim params ----------
@@ -25,27 +25,36 @@ ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1];
 % angle for cont will tag that freq
 % range red: ex [-5 -2] will tag one of red in that relative range
 
-ops.stim_trials_volt = {1, 'cont', 3, 1};%...
-                       %1, 'cont', 3, 1;...3, 'dev', [], 1
-                       %2, 'dev', [], 2};   
-ops.stim_delay = .01; % in sec
+ops.stim_trials_volt = {};
+
+%ops.stim_trials_volt = {2, 'dev', [], 1};...
+%                         2, 'dev', [], 2};%1, 'cont', 3, 1;...%};%...
+%                         2, 'dev', [], 1;...3, 'dev', [], 1
+%                         3, 'dev', [], 3};   
+ops.stim_delay = .200; % in sec
 ops.stim_trig_duration = 0.01; % sec
 
+%ops.reward_trials = {};
 % {paradigm num, 'type'}
 ops.reward_trials = {1, 'cont', 5;...
-                     3, 'dev', []};
-
-                 
+                     2, 'dev', []};
+        
 ops.lick_to_get_reward = 1;
-ops.reward_window = 2;
+ops.reward_window = 1;
 
 ops.water_dispense_duration_large = 0.03;% 0.04;
 ops.water_dispense_duration_small = 0.03;% 0.03;
 
+ops.reward_lick_rate_thersh_large = 1.5;          % licks per sec below thresh give reward
+ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh give reward1
+
+ops.lick_thresh = 4;
+ops.transition_thresh = 4;
+
 %
 ops.old_daq = 1;
 ops.daq_dev = 'Dev1';
-ops.sound_TD_amp = 0;
+ops.sound_TD_amp = 1;
 
 ops.volt_cmd = [0,0,0,0,0,0];
 ops.stim_chan = 1;
@@ -60,13 +69,18 @@ ops.reward_chan = 6;
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 
 % ----- auditory stim params ------------
-ops.start_freq = 2000;
-ops.end_freq = 90000;
+%ops.start_freq = 2000;
+%ops.end_freq = 90000;
+
+ops.start_freq = 1000;
+ops.end_freq = 18000;
+ops.num_freqs = 10;
+ops.freq_scale = 'log'; % 'log' or 'linear'
+ops.increase_factor = 1.5;
 
 % ----- auditory tones stim params -------------
-ops.num_freqs = 10;
-ops.increase_factor = 1.5;
-ops.MMN_patterns = [3,6; 4,7; 5,7];
+
+ops.MMN_patterns = [3,6; 4,7; 9,5];
 ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 4; % maybe use 2
 
@@ -160,11 +174,26 @@ end
 
 %% design stim
 % generate control frequencies
-control_carrier_freq = zeros(1, ops.num_freqs);
-control_carrier_freq(1) = ops.start_freq;
-for ii = 2:ops.num_freqs
-    control_carrier_freq(ii) = control_carrier_freq(ii-1) * ops.increase_factor;
+% control_carrier_freq = zeros(1, ops.num_freqs);
+% control_carrier_freq(1) = ops.start_freq;
+% for ii = 2:ops.num_freqs
+%     control_carrier_freq(ii) = control_carrier_freq(ii-1) * ops.increase_factor;
+% end
+
+if strcmpi(ops.freq_scale, 'log')
+    ops.increase_factor = (ops.end_freq/ops.start_freq)^(1/(ops.num_freqs-1));
+    control_carrier_freq = zeros(1, ops.num_freqs);
+    control_carrier_freq(1) = ops.start_freq;
+    for n_stim = 2:ops.num_freqs
+        control_carrier_freq(n_stim) = control_carrier_freq(n_stim-1) * ops.increase_factor;
+    end
+elseif strcmpi(ops.freq_scale, 'linear')
+    control_carrier_freq = linspace(ops.start_freq, ops.end_freq, ops.num_freqs);
 end
+
+stim_data.control_carrier_freq = control_carrier_freq;
+
+
 stim_data.control_carrier_freq = control_carrier_freq;
 %% initialize DAQ
 
@@ -261,6 +290,7 @@ for n_pr = 1:numel(ops.paradigm_sequence)
     state.last_volt = 0;
     state.start_reward = - 500;
     state.end_reward = - 500;
+    state.reward_trial = 0;
     
     % run trials
     for trl=1:ops.paradigm_trial_num(n_pr)
@@ -276,7 +306,7 @@ for n_pr = 1:numel(ops.paradigm_sequence)
         
         if ~isempty(stim_stim{n_pr})
             state.SLM_volt = stim_stim{n_pr}(trl);
-            state.trig_volt = logical(SLM_volt)*5;
+            state.trig_volt = logical(state.SLM_volt)*5;
         else
             state.SLM_volt = 0;
             state.trig_volt = 0;
@@ -286,7 +316,7 @@ for n_pr = 1:numel(ops.paradigm_sequence)
             state.reward_trial = rew_tr_seq{n_pr}(trl);
         end
         
-        waitbar(trl/ops.paradigm_trial_num(n_pr), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',n_pr, numel(ops.paradigm_sequence), trl, ang));
+        waitbar(trl/ops.paradigm_trial_num(n_pr), h, sprintf('Paradigm %d of %d: Trial %d, angle %d',n_pr, numel(ops.paradigm_sequence), trl, state.stim_type));
         % pause for isi
         
         % play

@@ -25,7 +25,7 @@ end
 
 state.end_pause = state.start_stim + ops.stim_delay;
 [state, data] = f_run_reward_pause(state, data, ops, session);
-volt_cmd(ops.trig_chan) = trig_volt;
+volt_cmd(ops.trig_chan) = state.trig_volt;
 f_write_daq_out(session, volt_cmd, ops.old_daq);
 f_write_daq_out(session, volt_cmd, ops.old_daq);
 
