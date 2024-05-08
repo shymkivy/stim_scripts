@@ -28,10 +28,10 @@ ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1];
 ops.stim_trials_volt = {};
 
 %ops.stim_trials_volt = {2, 'dev', [], 1};...
-                        %2, 'dev', [], 2};%1, 'cont', 3, 1;...%};%...
+%                         2, 'dev', [], 2};%1, 'cont', 3, 1;...%};%...
 %                         2, 'dev', [], 1;...3, 'dev', [], 1
 %                         3, 'dev', [], 3};   
-ops.stim_delay = .200; % in sec
+ops.stim_delay = .350; % in sec
 ops.stim_trig_duration = 0.01; % sec
 
 %ops.reward_trials = {};
@@ -106,7 +106,7 @@ circuit_path = [pwd1 '\..\RPvdsEx_circuits\'];
 circuit_file_name = 'sine_mod_play_YS.rcx';
 
 temp_time = clock;
-file_name = sprintf('aMMN_tones_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('ammn_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 %% compute stim types sequence
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);

@@ -13,10 +13,9 @@ end
 addpath([pwd1 '\functions'])
 %% params
 
-fname = 'mouseR_exp2_imaging';
+fname = 'mouseR_exp4_im';
 
-
-ops.paradigm_duration = 1730;  %  sec
+ops.paradigm_duration = 2400;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 % ------- trial bout params -----------
@@ -32,10 +31,10 @@ ops.require_second_lick = 0;
 ops.reward_period_flash = 0;
 
 ops.water_dispense_duration_large = 0.03;% 0.04;
-ops.water_dispense_duration_small = 0.03;% 0.03;
+ops.water_dispense_duration_small = 0.04;% 0.03;
 
 ops.reward_lick_rate_thersh_large = 1.5;          % licks per sec below thresh give reward
-ops.reward_lick_rate_thersh_small = 3.5;        % licks per sec below thresh give reward1
+ops.reward_lick_rate_thersh_small = 2.5;        % licks per sec below thresh give reward1
 
 % cont and mmn are dev trials fit among other trials
 % quiet is dev trial coming in some time range
@@ -47,17 +46,28 @@ ops.LED_chan = 2;
 ops.LED_bh_chan = 3;
 ops.reward_chan = 4;
 
-ops.sound_TD_amp = 1;
 
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
 ops.isi_time = 0.5;
 ops.rand_time_pad = .025;
 
+ops.sound_TD_amp = 1;
+
 % ----- auditory stim params ------------
-ops.start_freq = 1000;
-ops.end_freq = 18000;
-ops.num_freqs = 10;
+if contains(fname, 'exp4')
+    ops.start_freq = 2000;
+    ops.end_freq = 76887;
+    ops.num_freqs = 10;
+    ops.dev_tone_list = 5; % list of possible 'deviant' tones that get rewarded
+
+else
+    ops.start_freq = 1000;
+    ops.end_freq = 18000;
+    ops.num_freqs = 10;
+    ops.dev_tone_list = 5; % list of possible 'deviant' tones that get rewarded
+
+end
 ops.freq_scale = 'log'; % 'log' or 'linear'
 
 % ------ trial structure ------------
@@ -89,7 +99,7 @@ ops.transition_thresh = 4;
 
 % ----- TD amplifier params-----
 ops.base_freq = 0.001; % baseline frequecy
-ops.modulation_amp = 3;
+ops.modulation_amp = 5;
 
 %% Run script
 %s_ready_lick_ammn_core;

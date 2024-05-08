@@ -8,11 +8,11 @@ clear;
 %% parameters
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
-ops.isi_time = 0.5;
+ops.isi_time = 4;
 % ------ Paradigm sequence ------
-ops.paradigm_sequence = {'Control', 'MMN', 'flip_MMN'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
-ops.paradigm_trial_num = [400, 600, 600];                   % how many trials for each paradigm
-ops.paradigm_MMN_pattern = [0,2, 2];                       % which patterns for MMN/flip (controls are ignored)
+ops.paradigm_sequence = {'Control'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
+ops.paradigm_trial_num = [400];                   % how many trials for each paradigm
+ops.paradigm_MMN_pattern = [0];                       % which patterns for MMN/flip (controls are ignored)
                                                             % 1= horz/vert; 2= 45deg;
 % ------ MMN params ------
 ops.initial_red_num = 20;                                   % how many redundants to start with
@@ -25,14 +25,14 @@ ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1];
 % angle for cont will tag that freq
 % range red: ex [-5 -2] will tag one of red in that relative range
 
-ops.stim_trials_volt = {3, 'dev', [], 1};%...
-                        %1, 'cont', 3, 1;
-                        %3, 'dev', [], 1
-                        %2, 'dev', [], 2};   
-ops.stim_delay = .3; % in sec
+ops.stim_trials_volt = {};
+% ops.stim_trials_volt = {1, 'cont', 3, 1};%...
+%                         %1, 'cont', 3, 1;...3, 'dev', [], 1
+%                         %2, 'dev', [], 2};   
+ops.stim_delay = .01; % in sec
 ops.stim_trig_duration = 0.01; % sec
-
-                
+% 
+%                 
 % probability of deviants   % MMN_probab=[.01 .01 .02 .1 .1 .1 .1 .5 .5 .5 1];   % jordan's probab
 % ------ Other ------
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
@@ -61,7 +61,7 @@ circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 circuit_file_name = 'sine_mod_play_YS.rcx';
 
 temp_time = clock;
-file_name = sprintf('ammn_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('aMMN_tones_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 %% compute stim types sequence
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
@@ -128,6 +128,7 @@ end
 
 %% initialize DAQ
 ops.old_daq = 1;
+
 session=daq.createSession('ni');
 session.addAnalogOutputChannel('Dev1','ao0','Voltage');
 session.addAnalogOutputChannel('Dev1','ao1','Voltage');
@@ -135,9 +136,9 @@ session.addAnalogOutputChannel('Dev1','ao2','Voltage'); % Prairie trig in (>2V)
 session.addAnalogOutputChannel('Dev1','ao3','Voltage'); % SLM indicator
 session.IsContinuous = true;
 %session.Rate = 10000;
-ops.volt_cmd = [0 0 0 0];
-session.outputSingleScan(ops.volt_cmd);
-volt_cmd = ops.volt_cmd;
+volt_cmd = [0 0 0 0];
+session.outputSingleScan(volt_cmd);
+ops.volt_cmd = volt_cmd;
 
 %% Run trials
 RP.Run;

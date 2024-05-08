@@ -16,9 +16,9 @@ if isempty(pwd1)
 end
 addpath([pwd1 '\functions'])
 %% params
-fname = 'mouseR_exp3';
+fname = 'mouseR_exp2';
 
-ops.paradigm_duration = 1200;  %  sec
+ops.paradigm_duration = 2400;  %  sec
 ops.trial_cap = 500;            % 200 - 400 typical with 25sol duration
 
 ops.initial_stop_lick_period = 0;

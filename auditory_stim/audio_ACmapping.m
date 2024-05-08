@@ -3,7 +3,6 @@
 % last update 5/22/19
 %
 
-%%
 clear;
 close all;
 
@@ -50,6 +49,7 @@ temp_time = clock;
 file_name = sprintf('AC_mapping_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 
+%%
 %%
 % generate control frequencies
 % each frequency is a multiple of the previous (logarithmic, for octaves factor = 2)

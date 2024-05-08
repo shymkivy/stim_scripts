@@ -42,6 +42,7 @@ fprintf('Expected run duration: %.1fmin (%.fsec)\n',run_time/60,run_time);
 %%
 pwd2 = fileparts(which('audio_MMN_tones2.m')); %mfilename
 addpath([pwd2 '\functions']);
+addpath([pwd2 '\..\behavior\functions']);
 save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 circuit_file_name = 'sine_mod_play_YS.rcx';
@@ -98,14 +99,15 @@ for ii = 2:ops.num_freqs
 end
 
 %% initialize DAQ
+ops.old_daq = 1;
 session=daq.createSession('ni');
 session.addAnalogOutputChannel('Dev1','ao0','Voltage');
 session.addAnalogOutputChannel('Dev1','ao1','Voltage');
 session.IsContinuous = true;
 %session.Rate = 10000;
 volt_cmd = [0 0];
-session.outputSingleScan(volt_cmd);
-
+ops.volt_cmd = [0 0];
+ops.old_daq = 1;
 
 %% Run trials
 RP.Run;
@@ -113,7 +115,7 @@ RP.SetTagVal('ModulationAmp', ops.modulation_amp);
 
 start_paradigm=now*86400;%GetSecs();
 
-f_pause_synch(10, session, ops.synch_pulse, volt_cmd);
+f_pause_synch(10, session, ops.synch_pulse, ops);
 stim_times = cell(numel(ops.paradigm_sequence),1);
 h = waitbar(0, 'initializeing...');
 for n_pr = 1:numel(ops.paradigm_sequence)
@@ -145,14 +147,14 @@ for n_pr = 1:numel(ops.paradigm_sequence)
         % play
         start_stim = now*86400;%GetSecs();
         RP.SetTagVal('CarrierFreq', control_carrier_freq(ang));
-        volt_cmd(1) = vis_volt;
-        session.outputSingleScan(volt_cmd);
-        session.outputSingleScan(volt_cmd);
+        ops.volt_cmd(1) = vis_volt;
+        session.outputSingleScan(ops.volt_cmd);
+        session.outputSingleScan(ops.volt_cmd);
         pause(ops.stim_time);
         RP.SetTagVal('CarrierFreq', ops.base_freq);
-        volt_cmd(1) = 0;
-        session.outputSingleScan(volt_cmd);
-        session.outputSingleScan(volt_cmd);
+        ops.volt_cmd(1) = 0;
+        session.outputSingleScan(ops.volt_cmd);
+        session.outputSingleScan(ops.volt_cmd);
         
         
         % record
@@ -161,18 +163,18 @@ for n_pr = 1:numel(ops.paradigm_sequence)
     end
     
     if n_pr < numel(ops.paradigm_sequence)
-        f_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse, volt_cmd);
+        f_pause_synch(ops.inter_paradigm_pause_time, session, ops.synch_pulse, ops);
     end
     
 end
 close(h);
 
 %%
-f_pause_synch(10, session, ops.synch_pulse, volt_cmd)
+f_pause_synch(10, session, ops.synch_pulse, ops)
 
 %% close all
-volt_cmd(1:end) = 0;
-session.outputSingleScan(volt_cmd);
+ops.volt_cmd(1:end) = 0;
+session.outputSingleScan(ops.volt_cmd);
 RP.Halt;
 
 %% save info
