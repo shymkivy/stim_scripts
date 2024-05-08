@@ -186,44 +186,48 @@ session.outputSingleScan([0,0]);
 RP.Halt;
 
 %% play sound
+if 0
+    for n_st = 1:numel(ops.grating_angles)
+        sig2 = grating_stim_norm(n_st,:);
+        %sig2 = grating_stim_norm(n_st,:)'+rand(numel(grating_stim_norm(n_st,:)),1);
 
-% sig2 = grating_stim_norm(3,:);
-% sig2 = grating_stim_norm(3,:)'+rand(numel(grating_stim_norm(3,:)),1);
-% 
-% rms(grating_stim_norm(2,:))
-% 
-% sound(sig2, 1/sig_dt);
+        %rms(grating_stim_norm(2,:))
 
+        sound(sig2, 1/ops.sig_dt);
+
+        pause(1)
+    end
+end
 %% plot stuff 
 
-%figure; cwt(sig2, 1/sig_dt);
+if 0
+    for n_st = 1:numel(ops.grating_angles)
+        figure;
+        cwt(grating_stim_norm(n_st,:), 1/ops.sig_dt);
+    end
 
-% 
-% rms(grating_stim(2,:))
-% 
-% figure; dwt(rand_sig,  'db4');
-% [wt,f] = cwt(rand_sig, 1/sig_dt);
-% 
-% [wt,f] = cwt(grating_stim(2,:), 1/sig_dt);
-% xrec = icwt(wt);
-% 
-% figure; cwt(xrec, 1/sig_dt);
-% figure; imagesc(abs(wt))
-% 
-% 
-% figure; plot(sig2);
-% figure; pwelch(sig2,[],[],[],1/sig_dt);
-% figure; spectrogram(grating_stim(2,:), 1000, 100, 1000, 1/sig_dt, 'yaxis'); ax = gca; ax.YScale = 'log'; ylim([2, 90]); ax.YTick = [2.5, 5, 10, 20, 40, 80];
+    figure; 
+    for n_st = 1:numel(ops.grating_angles)
+        subplot(2,5,n_st)
+        dwt(grating_stim_norm(n_st,:),  'db4');
+        [wt,f] = cwt(grating_stim_norm(n_st,:), 1/ops.sig_dt);
+        xrec = icwt(wt);
+        %cwt(xrec, 1/ops.sig_dt);
+        imagesc(abs(wt))
+        title(sprintf('angle %.2f', ops.grating_angles(n_st)))
+    end
 
-% figure; plot(rand_sig);
-% figure; pwelch(rand_sig,[],[],[],1/sig_dt);
-% 
-% figure; plot(sig_chirp);
-% figure; pwelch(sig_chirp,[],[],[],1/sig_dt);
-% figure; spectrogram(sig_chirp, 1000, 100, 1000, 1/sig_dt, 'yaxis'); ax = gca; ax.YScale = 'log'; ylim([2, 90]); ax.YTick = [2.5, 5, 10, 20, 40, 80];
-% figure; pspectrum(sig_chirp,1/sig_dt,'spectrogram','TimeResolution',0.1, 'OverlapPercent',99,'Leakage',0.85)
-% 
-% 
+    figure; 
+    for n_st = 1:numel(ops.grating_angles)
+        subplot(2,5,n_st)
+        spectrogram(grating_stim_norm(n_st,:), 1000, 100, 1000, 1/ops.sig_dt, 'yaxis');
+        ax = gca;
+        ax.YScale = 'log';
+        ylim([2, 90]);
+        ax.YTick = [2.5, 5, 10, 20, 40, 80];
+        title(sprintf('angle %.2f', ops.grating_angles(n_st)))
+    end
+end
 
 %% save info
 fprintf('Saving...\n');
