@@ -81,7 +81,7 @@ end
 
 
 %% initialize
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 AssertOpenGL; % Make sure this is running on OpenGL Psychtoolbox:
 screenid = max(Screen('Screens')); % Choose screen with maximum id - the secondary display on a dual-display setup for display
 [win, rect] = Screen('OpenWindow',screenid, [255/2 255/2 255/2]); % rect is the coordinates of the screen
