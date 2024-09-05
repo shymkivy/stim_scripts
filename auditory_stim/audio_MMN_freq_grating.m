@@ -23,14 +23,14 @@ ops.MMN_probab=[0.1*ones(1,20) .2 .25 .5 1];
 ops.synch_pulse = 1;      % 1 Do you want to use led pulse for synchrinization
 
 % ------ visual stim params ------
-ops.squarewave=1;                                           % do squarewaves instead of sinewaves
-ops.driftingGrating = 1;                                    % use if you want to make it drifting grating
-ops.isicolor=170;   % appx middle                                      % Shade of gray on screen during isi (1 if black, 255/2 if gray)
-ops.ctrsts=[.015625 .03125 .0625 .125 .25 .5 .85];          % Range of contrasts to use
-ops.ctrst = 7;                                                  % pick 
-ops.spfrqs=[.01  .02 .04 .08 .16 .32];                      % Range of spatial freqs to use
-ops.spfrq = 4;                                                  % pick 
-ops.angs_rad = pi*(0:7)/8;                                  % Orientations to use, in rad
+% ops.squarewave=1;                                           % do squarewaves instead of sinewaves
+% ops.driftingGrating = 1;                                    % use if you want to make it drifting grating
+% ops.isicolor=170;   % appx middle                                      % Shade of gray on screen during isi (1 if black, 255/2 if gray)
+% ops.ctrsts=[.015625 .03125 .0625 .125 .25 .5 .85];          % Range of contrasts to use
+% ops.ctrst = 7;                                                  % pick 
+% ops.spfrqs=[.01  .02 .04 .08 .16 .32];                      % Range of spatial freqs to use
+% ops.spfrq = 4;                                                  % pick 
+%ops.angs_rad = pi*(0:7)/8;                                  % Orientations to use, in rad
 %ops.MMN_patterns = [1, 5; 3, 7; 2, 6; 4, 8];                % MMN orthogonal pairs (indexing through angs_rad)
 %grating_angles = [3, 2, 1, 0, -1, -2]*pi/6;
 
@@ -65,10 +65,11 @@ clear temp_time;
 %% compute stim types sequence
 stim_ctx_stdcount = cell(numel(ops.paradigm_sequence),1);
 stim_ang = cell(numel(ops.paradigm_sequence),1);
+num_grat = numel(ops.grating_angles);       % was 8 for freq grating datasets with 600, 600, by mistake
 for parad_num = 1:numel(ops.paradigm_sequence)
     if strcmpi(ops.paradigm_sequence{parad_num}, 'control')
         samp_seq = randperm(ops.paradigm_trial_num(parad_num));
-        samp_pool = repmat(1:numel(ops.angs_rad),1,ceil(ops.paradigm_trial_num(parad_num)/numel(ops.angs_rad)));    
+        samp_pool = repmat(1:num_grat,1,ceil(ops.paradigm_trial_num(parad_num)/num_grat));    
         stim_ang{parad_num} = samp_pool(samp_seq)';
     else
         stdcounts = 0;
@@ -101,7 +102,7 @@ end
 %% initialize RZ6
 [RP, fs] = f_RZ6_CP_initialize([circuit_path circuit_file_name]);
 ops.sig_dt = 1/fs; %1/195312.5; % 100kHz sampling signal
-
+%ops.sig_dt = 1/195312.5;
 %% design stim
 disp('Generating gratings...');
 grating_stim = f_generate_freq_grating(ops);
@@ -204,6 +205,7 @@ if 0
     for n_st = 1:numel(ops.grating_angles)
         figure;
         cwt(grating_stim_norm(n_st,:), 1/ops.sig_dt);
+        title(sprintf('ori %d', n_st))
     end
 
     figure; 
