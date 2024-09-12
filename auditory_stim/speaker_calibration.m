@@ -1,24 +1,20 @@
 
-params.pure_tones = 1;
+params.pure_tones = 0;
 params.gain_DB = 0;
 
-params.freqs_to_test = [0 2 4 6 10 16 20 40 60 80];
-params.amps_to_test = [0 1 2 4 6 10];
+params.freqs_to_test = [0 2 4 6 8 10 12 16 20 30 40 50 60 70 80];
+params.amps_to_test = [0 1 2 3 4 5 6 7 8 9 10];
+params.num_rep = 5;
 
-[freq_mesh,amp_mesh] = meshgrid(1:numel(params.freqs_to_test),1:numel(params.amps_to_test));
-rand_ind = randsample(numel(freq_mesh), numel(freq_mesh));
-
-
-params.stim_duration = .5;
+params.stim_duration = 1;
 
 params.base_freq = 0.001;
 params.base_mod = 0.001;
 
 %% initialize RZ6
-num_freqs = numel(params.freqs_to_test);
-num_amps = numel(params.amps_to_test);
-
+pwd2 = fileparts(which('speaker_calibration.m')); %mfilename
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
+addpath([pwd2, '\functions'])
 if params.pure_tones
     [RP, fs] = f_RZ6_CP_initialize([circuit_path 'pure_tone_play_acquire_YS.rcx']);
 else
@@ -32,30 +28,39 @@ pause(.1);
 RP.SetTagVal('ModulationAmp', params.base_mod);
 RP.SetTagVal('CarrierFreq', params.base_freq);
 
-data_all = cell(num_freqs, num_amps);
+%%
+num_freqs = numel(params.freqs_to_test);
+num_amps = numel(params.amps_to_test);
 
-for n_samp = 1:numel(freq_mesh)
-    n_amp = amp_mesh(rand_ind(n_samp));
-    n_freq = freq_mesh(rand_ind(n_samp));
-    disp(['n=' num2str(n_samp) '/' num2str(numel(freq_mesh)) ' amp: ' num2str(params.amps_to_test(n_amp)) ' freq: ' num2str(params.freqs_to_test(n_freq))]);
-    RP.SetTagVal('ModulationAmp', params.amps_to_test(n_amp));
-    RP.SetTagVal('CarrierFreq', params.freqs_to_test(n_freq)*1000);
-    pause(.1);
-    %tic;
-    data_all{n_freq, n_amp} = f_RZ6_acquire_sound(RP, fs, params.stim_duration);
-    %toc;
-    RP.SetTagVal('ModulationAmp', params.base_mod);
-    RP.SetTagVal('CarrierFreq', params.base_freq);
-    pause(.1);
-    %pause(isi);
+[freq_mesh,amp_mesh] = meshgrid(1:numel(params.freqs_to_test),1:numel(params.amps_to_test));
+
+num_tr = numel(freq_mesh);
+
+data_all = cell(num_freqs, num_amps, params.num_rep);
+
+for n_rep = 1:params.num_rep
+    rand_ind = randsample(num_tr, num_tr);
+    for n_samp = 1:num_tr
+        n_amp = amp_mesh(rand_ind(n_samp));
+        n_freq = freq_mesh(rand_ind(n_samp));
+        disp(['n=' num2str(n_samp) '/' num2str(num_tr) ' amp: ' num2str(params.amps_to_test(n_amp)) ' freq: ' num2str(params.freqs_to_test(n_freq))]);
+        RP.SetTagVal('ModulationAmp', params.amps_to_test(n_amp));
+        RP.SetTagVal('CarrierFreq', params.freqs_to_test(n_freq)*1000);
+        pause(0.5);
+        %tic;
+        data_all{n_freq, n_amp, n_rep} = f_RZ6_acquire_sound(RP, fs, params.stim_duration);
+        %toc;
+        RP.SetTagVal('ModulationAmp', params.base_mod);
+        RP.SetTagVal('CarrierFreq', params.base_freq);
+        pause(.5);
+        %pause(isi);
+    end
 end
-
-%%      
+      
 RP.Halt;
 
 %% save
 
-pwd2 = fileparts(which('speaker_calibration.m')); %mfilename
 save_path = [pwd2 '\..\..\stim_scripts_output\'];
 
 temp_time = clock;
