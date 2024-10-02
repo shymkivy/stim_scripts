@@ -17,10 +17,8 @@ circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 addpath([pwd2, '\functions'])
 if params.pure_tones
     [RP, fs] = f_RZ6_CP_initialize([circuit_path 'pure_tone_play_acquire_YS.rcx']);
-    title1 = 'pure tones';
 else
     [RP, fs] = f_RZ6_CP_initialize([circuit_path 'sine_mod_play_acquire_YS.rcx']);
-    title1 = 'SAM tones';
 end
 params.fs = fs;
 
@@ -85,12 +83,19 @@ data_load = load([save_path, 'speaker_cal_9_5_24_stim_data_10h_39m'], 'data_st')
 data_st = data_load.data_st;
 data_all = data_st.data_all;
 params = data_st.params;
+fs = params.fs;
 
+%%
 num_freqs = numel(params.freqs_to_test);
 num_amps = numel(params.amps_to_test);
 
+if params.pure_tones
+    title1 = 'pure tones';
+else
+    title1 = 'SAM tones';
+end
 
-Pref = 2e-5;
+Pref = 2e-5;        % p reference
 S = 2.2*10e-3; %mV/Pa
 
 mbFilt = designfilt('highpassiir','FilterOrder',5, ...
@@ -119,12 +124,21 @@ end
 legend(amp_leg)
 title(title1);
 
-figure; plot(data_all2{1, 1})
+for n_amp = 1:num_amps
+    for n_freq = 1:num_freqs
+        figure; plot(data_all2{n_freq, n_amp})
+        title(sprintf('%dkHz; %damp', params.freqs_to_test(n_freq), params.amps_to_test(n_amp)))
+    end
+end
 % 
 % %figure; imagesc(reshape(amp_c, [],1,3))
 % 
-n_freq = 2;
+n_freq = 10;
+n_amp = 5;
 figure; hold on;
-pwelch(data_all2{n_freq, 1},500, 100, 500, fs);
+pwelch(data_all2{n_freq, n_amp},500, 100, 500, fs);
+
+
+
 % pwelch(data_all2{n_freq, 2},500, 100, 500, fs);
 % pwelch(data_all2{n_freq, 3},500, 100, 500, fs);
