@@ -1,6 +1,6 @@
 
 params.pure_tones = 1;
-params.gain_DB = 40;
+params.gain_DB = 40;      % same as set on amplifier
 
 params.freqs_to_test = [2 4 6 8 10 12 14 16 18 20 25 30 25 40 45 50 55 60 65 70 80];
 params.amps_to_test = [0 0.5 1 1.5 2 2.5 3 4 5 6 7 8 9 10];
@@ -54,7 +54,7 @@ for n_rep = 1:params.num_rep
         %toc;
         RP.SetTagVal('ModulationAmp', params.base_mod);
         RP.SetTagVal('CarrierFreq', params.base_freq);
-        pause(.5);
+        pause(0.5);
         %pause(isi);
     end
 end
