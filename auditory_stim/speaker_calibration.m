@@ -1,10 +1,10 @@
 
-params.pure_tones = 0;
-params.gain_DB = 0;
+params.pure_tones = 1;
+params.gain_DB = 40;
 
-params.freqs_to_test = [0 2 4 6 8 10 12 16 20 30 40 50 60 70 80];
-params.amps_to_test = [0 1 2 3 4 5 6 7 8 9 10];
-params.num_rep = 5;
+params.freqs_to_test = [2 4 6 8 10 12 14 16 18 20 25 30 25 40 45 50 55 60 65 70 80];
+params.amps_to_test = [0 0.5 1 1.5 2 2.5 3 4 5 6 7 8 9 10];
+params.num_rep = 3;
 
 params.stim_duration = 1;
 
@@ -21,6 +21,8 @@ else
     [RP, fs] = f_RZ6_CP_initialize([circuit_path 'sine_mod_play_acquire_YS.rcx']);
 end
 params.fs = fs;
+
+params.buf_size = RP.GetTagVal('bufSize');
 
 RP.SetTagVal('ModulationAmp', 5);
 RP.SetTagVal('CarrierFreq', 10*1000);
@@ -64,7 +66,7 @@ pwd2 = fileparts(which('speaker_calibration.m')); %mfilename
 save_path = [pwd2 '\..\..\stim_scripts_output\'];
 
 temp_time = clock;
-file_name = sprintf('speaker_cal_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('speaker_cal_40dbgain_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 
 data_st = struct;
@@ -72,7 +74,7 @@ data_st.data_all = data_all;
 data_st.params = params;
 
 fprintf('Saving...\n');
-save([save_path, file_name, '.mat'],'data_st');
+save([save_path, file_name, '.mat'],'data_st', '-v7.3');
 fprintf('Done\n');
 
 %% analyze

@@ -30,7 +30,7 @@ while index_start < sig_size
     % wait until done playing and writing A
     while(curindex < bufpts)
         curindex = RP.GetTagVal('index');
-        pause(.05);
+        %pause(.01);
     end
     
     % read segment A and save
@@ -45,7 +45,7 @@ while index_start < sig_size
     % wait until start playing A 
     while(curindex > bufpts)
         curindex = RP.GetTagVal('index');
-        pause(.05);
+        %pause(.01);
     end
 
     % read segment B
