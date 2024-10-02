@@ -12,7 +12,7 @@ params.base_freq = 0.001;
 params.base_mod = 0.001;
 
 %% initialize RZ6
-pwd2 = fileparts(which('speaker_calibration.m')); %mfilename
+pwd2 = fileparts(which('speaker_calibration_record.m')); %mfilename
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 addpath([pwd2, '\functions'])
 if params.pure_tones
@@ -45,7 +45,8 @@ for n_rep = 1:params.num_rep
     for n_samp = 1:num_tr
         n_amp = amp_mesh(rand_ind(n_samp));
         n_freq = freq_mesh(rand_ind(n_samp));
-        disp(['n=' num2str(n_samp) '/' num2str(num_tr) ' amp: ' num2str(params.amps_to_test(n_amp)) ' freq: ' num2str(params.freqs_to_test(n_freq))]);
+        fprintf('rep%d/%d; n%d/%d; amp: %.1fV; freq %.2fkHz\n', n_rep, params.num_rep, n_samp, num_tr, params.amps_to_test(n_amp), params.freqs_to_test(n_freq));
+        %disp(['n=' num2str(n_samp) '/' num2str(num_tr) ' amp: ' num2str(params.amps_to_test(n_amp)) ' freq: ' num2str(params.freqs_to_test(n_freq))]);
         RP.SetTagVal('ModulationAmp', params.amps_to_test(n_amp));
         RP.SetTagVal('CarrierFreq', params.freqs_to_test(n_freq)*1000);
         pause(0.5);
@@ -62,11 +63,10 @@ end
 RP.Halt;
 
 %% save
-pwd2 = fileparts(which('speaker_calibration.m')); %mfilename
 save_path = [pwd2 '\..\..\stim_scripts_output\'];
 
 temp_time = clock;
-file_name = sprintf('speaker_cal_40dbgain_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('speaker_cal_40dbgain_nocov_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 
 data_st = struct;
