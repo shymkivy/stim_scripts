@@ -24,9 +24,11 @@ params.fs = fs;
 
 params.buf_size = RP.GetTagVal('bufSize');
 
-RP.SetTagVal('ModulationAmp', 5);
-RP.SetTagVal('CarrierFreq', 10*1000);
-pause(.1);
+% RP.SetTagVal('ModulationAmp', 5);
+% RP.SetTagVal('CarrierFreq', 10*1000);
+% pause(.1);
+RP.SetTagVal('ModulationAmp', params.base_mod);
+RP.SetTagVal('CarrierFreq', params.base_freq);
 RP.SetTagVal('ModulationAmp', params.base_mod);
 RP.SetTagVal('CarrierFreq', params.base_freq);
 
