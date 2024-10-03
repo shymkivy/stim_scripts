@@ -2,7 +2,7 @@
 params.pure_tones = 1;
 params.gain_DB = 40;      % same as set on amplifier
 
-params.freqs_to_test = [2 4 6 8 10 12 14 16 18 20 25 30 25 40 45 50 55 60 65 70 80];
+params.freqs_to_test = [2 4 6 8 10 12 14 16 18 20 25 30 35 40 45 50 55 60 65 70 80];
 params.amps_to_test = [0 0.5 1 1.5 2 2.5 3 4 5 6 7 8 9 10];
 params.num_rep = 3;
 
@@ -24,9 +24,11 @@ params.fs = fs;
 
 params.buf_size = RP.GetTagVal('bufSize');
 
-RP.SetTagVal('ModulationAmp', 5);
-RP.SetTagVal('CarrierFreq', 10*1000);
-pause(.1);
+% RP.SetTagVal('ModulationAmp', 5);
+% RP.SetTagVal('CarrierFreq', 10*1000);
+% pause(.1);
+RP.SetTagVal('ModulationAmp', params.base_mod);
+RP.SetTagVal('CarrierFreq', params.base_freq);
 RP.SetTagVal('ModulationAmp', params.base_mod);
 RP.SetTagVal('CarrierFreq', params.base_freq);
 
