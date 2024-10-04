@@ -2,8 +2,8 @@
 params.pure_tones = 1;
 params.gain_DB = 40;      % same as set on amplifier
 
-params.freqs_to_test = [2 4 6 8 10 12 14 16 18 20 25 30 35 40 45 50 55 60 65 70 80];
-params.amps_to_test = [0 0.5 1 1.5 2 2.5 3 4 5 6 7 8 9 10];
+params.freqs_to_test = [2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 35 40 45 50 55 60 65 70 75 80];
+params.amps_to_test = [0 0.25 0.5 0.75 1 1.5 2 2.5 3 3.5 4 5 6 7 8 9 10];
 params.num_rep = 3;
 
 params.stim_duration = 1;
@@ -51,13 +51,13 @@ for n_rep = 1:params.num_rep
         %disp(['n=' num2str(n_samp) '/' num2str(num_tr) ' amp: ' num2str(params.amps_to_test(n_amp)) ' freq: ' num2str(params.freqs_to_test(n_freq))]);
         RP.SetTagVal('ModulationAmp', params.amps_to_test(n_amp));
         RP.SetTagVal('CarrierFreq', params.freqs_to_test(n_freq)*1000);
-        pause(0.5);
+        pause(0.1);
         %tic;
         data_all{n_freq, n_amp, n_rep} = f_RZ6_acquire_sound(RP, fs, params.stim_duration);
         %toc;
         RP.SetTagVal('ModulationAmp', params.base_mod);
         RP.SetTagVal('CarrierFreq', params.base_freq);
-        pause(0.5);
+        pause(0.1);
         %pause(isi);
     end
 end
@@ -68,7 +68,7 @@ RP.Halt;
 save_path = [pwd2 '\..\..\stim_scripts_output\'];
 
 temp_time = clock;
-file_name = sprintf('speaker_cal_40dbgain_nocov_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
+file_name = sprintf('speaker_cal_40dbgain_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
 clear temp_time;
 
 data_st = struct;
