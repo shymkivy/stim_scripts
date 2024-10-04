@@ -34,6 +34,10 @@ ops.MMN_patterns = [3,6; 4,7; 3,8];
 ops.base_freq = 0.001; % baseline frequency
 ops.modulation_amp = 4; % maybe use 2
 
+ops.use_calib = 1;
+ops.calib_fname = 'calib_speaker_cal_40dbgain_10_3_24_stim_data_14h_58m';
+ops.target_db = 70;
+
 %% predicted run time
 run_time = (ops.stim_time+ops.isi_time+0.025)*(sum(ops.paradigm_trial_num)) + (numel(ops.paradigm_trial_num)-1)*ops.inter_paradigm_pause_time + 20 + 120;
 fprintf('Expected run duration: %.1fmin (%.fsec)\n',run_time/60,run_time);
@@ -46,6 +50,7 @@ addpath([pwd2 '\..\behavior\functions']);
 save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 circuit_file_name = 'sine_mod_play_YS.rcx';
+ops.calib_path = [pwd2 '\..\..\stim_scripts_output\'];
 
 temp_time = clock;
 file_name = sprintf('ammn_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
@@ -97,6 +102,8 @@ control_carrier_freq(1) = ops.start_freq;
 for ii = 2:ops.num_freqs
     control_carrier_freq(ii) = control_carrier_freq(ii-1) * ops.increase_factor;
 end
+
+ops = f_get_calib(control_carrier_freq, ops);
 
 %% initialize DAQ
 ops.old_daq = 1;
