@@ -158,6 +158,32 @@ calib.freq_amp_vol = freq_amp_vol;
 
 save([save_path, 'calib_', fname], 'calib');
 
+
+%% generate mod amplitudes
+
+test_freq = [2, 3, 4.5, 6.75, 10.125, 15.188, 22.781, 34.172, 51.258, 76.887];
+
+target_db = 70;
+[mod_volt, pred_db] = f_get_calib_core(test_freq*1000, fit_frq_amp, target_db);
+
+% mod_volt70 = [8.98, 8.52, 8.06, 10, 2.74, 3.06, 4.7, 2.27, 2.93, 6.08];
+
+target_db = 66;
+[mod_volt, pred_db] = f_get_calib_core(test_freq*1000, fit_frq_amp, target_db);
+
+% mod_volt66 = [8.98, 8.52, 8.06, 5.2, 1.07, 1.1, 2.45, 0.98, 1.67, 6.08];
+
+test_freq = [2 4 6 8 10 12 14 16 18 20 25 30 35 40 45 50 55 60 65 70 75 80];
+target_db = 70;
+[mod_volt, pred_db] = f_get_calib_core(test_freq*1000, fit_frq_amp, target_db);
+
+% mod_volt70 = [8.98, 8.1, 10, 6.42, 2.75, 3.75, 1.85, 5, 8.3, 7.94, 4.73, 4.28, 2.15, 3.47, .17, 2.74, 6.01, 8.03, 6.1, 8.99, 9, 5.93];
+
+target_db = 66;
+[mod_volt, pred_db] = f_get_calib_core(test_freq*1000, fit_frq_amp, target_db);
+
+% mod_volt66 = [8.98, 8.1, 9.52, 3.14, 1.08, 1.87, 0.68, 2.03, 3.69, 3.69, 2.27, 1.95, 0.88, 2.06, 1.64, 1.64, 2.74, 9.91, 6.1, 6.32, 9, 5.93] 
+
 % amps_fit = (0:0.1:10)';
 % freq_fit = ones(numel(amps_fit),1)*50;
 % y_data = fitm([freq_fit, amps_fit]);
