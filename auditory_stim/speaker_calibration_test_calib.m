@@ -29,6 +29,13 @@ params.base_mod = 0.001;
 pwd2 = fileparts(which('speaker_calibration_test_calib.m')); %mfilename
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
 addpath([pwd2, '\functions'])
+<<<<<<< HEAD
+params.calib_path = [pwd2 '\..\..\stim_scripts_output\'];
+
+%%
+params = f_get_calib(params.freqs_to_test*1000, params);
+=======
+>>>>>>> 0f1d2740e589386e39191eba8c170d4fdfc6edfe
 
 %%
 if params.pure_tones
