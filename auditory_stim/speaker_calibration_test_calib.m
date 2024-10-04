@@ -3,7 +3,7 @@ params.pure_tones = 1;
 params.gain_DB = 40;      % same as set on amplifier
 
 params.freqs_to_test = [2 4 6 8 10 12 14 16 18 20 25 30 35 40 45 50 55 60 65 70 80];
-params.num_rep = 3;
+params.num_rep = 5;
 
 params.stim_duration = 1;
 
@@ -22,7 +22,7 @@ addpath([pwd2, '\functions'])
 params.calib_path = [pwd2 '\..\..\stim_scripts_output\'];
 
 %%
-params = f_get_calib(params.freqs_to_test, params);
+params = f_get_calib(params.freqs_to_test*1000, params);
 
 %%
 if params.pure_tones
