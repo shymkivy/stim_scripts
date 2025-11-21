@@ -57,7 +57,7 @@ clear temp_time;
 control_carrier_freq = zeros(1, num_freqs);
 control_carrier_freq(1) = start_freq;
 for ii = 2:num_freqs
-    control_carrier_freq(ii) = control_carrier_freq(ii-1) * increase_factor;
+    a(ii) = control_carrier_freq(ii-1) * increase_factor;
 end
 
 carrier_freq = [control_carrier_freq(2), control_carrier_freq(6)]; % in Hz

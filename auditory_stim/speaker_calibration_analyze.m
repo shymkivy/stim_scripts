@@ -98,19 +98,38 @@ figure;
 plot(data_allf{n_freq, n_amp, n_rep})
 title(sprintf('%dkHz; %damp', params.freqs_to_test(n_freq), params.amps_to_test(n_amp)))
 
-
-n_rep = 2;
-n_amp = 10;
-f1 = figure; hold on;
+n_amp = 1;
+off_data = zeros(251, num_freqs);
 for n_freq = 1:num_freqs
-    [pxx,f] = pwelch(data_allf{n_freq, n_amp, n_rep},500, 100, 500, fs);
-    plot(f/1000, 10*log10(pxx), color=freq_col(n_freq,:))
+    pxx_all = zeros(251,params.num_rep);
+    for n_rep = 1:params.num_rep
+        [pxx,f] = pwelch(data_allf{n_freq, n_amp, n_rep},500, 100, 500, fs);
+        pxx_all(:,n_rep) = pxx;
+    end
+    off_data(:,n_freq) = mean(pxx_all,2);
 end
-xlabel('Frequency (kHz)')
-ylabel('Power/frequency (dB/Hz)')
-legend(freq_leg)
-%f1.CurrentAxes.XScale = 'log';
-title(sprintf('var freq; amp=%.1fV; rep=%d', params.amps_to_test(n_amp), n_rep))
+
+for n_amp = 2:numel(params.amps_to_test)
+    f1 = figure; hold on;
+    
+    use_freqs = false(num_freqs,1);
+    for n_freq = 1:2:num_freqs
+        pxx_all = zeros(251,params.num_rep);
+        for n_rep = 1:params.num_rep
+            [pxx,f] = pwelch(data_allf{n_freq, n_amp, n_rep},500, 100, 500, fs);
+            pxx_all(:,n_rep) = pxx;
+        end
+        pxx_all2 = mean(pxx_all,2);
+        plot(f/1000, 10*log10(pxx_all2), color=freq_col(n_freq,:))
+        use_freqs(n_freq) = 1;
+    end
+    plot(f/1000, 10*log10(mean(off_data,2)), color='k', linewidth=2)
+    xlabel('Frequency (kHz)')
+    ylabel('Power/frequency (dB/Hz)')
+    legend([freq_leg(use_freqs); {'Noise'}])
+    %f1.CurrentAxes.XScale = 'log';
+    title(sprintf('var freq; amp=%.1fV', params.amps_to_test(n_amp)))
+end
 
 
 n_freq = 1;
