@@ -8,7 +8,7 @@ clear;
 %% parameters
 % ------ Stim params ------
 ops.stim_time = 0.5;                                         % sec
-ops.isi_time = 4;
+ops.isi_time = 1;
 % ------ Paradigm sequence ------
 ops.paradigm_sequence = {'Control'};     % 3 options {'Control', 'MMN', 'flip_MMN'}, concatenate as many as you want
 %ops.paradigm_sequence = {'MMN', 'flip_MMN'}; 
@@ -48,7 +48,7 @@ pwd2 = fileparts(which('audio_MMN_tones2.m')); %mfilename
 addpath([pwd2 '\functions']);
 save_path = [pwd2 '\..\..\stim_scripts_output\auditory\'];
 circuit_path = [pwd2 '\..\RPvdsEx_circuits\'];
-circuit_file_name = 'sine_mod_play_YS.rcx';
+circuit_file_name = 'sine_mod_play2_YS.rcx';
 
 temp_time = clock;
 file_name = sprintf('ammn_echo_%d_%d_%d_stim_data_%dh_%dm',temp_time(2), temp_time(3), temp_time(1)-2000, temp_time(4), temp_time(5));
