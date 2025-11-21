@@ -219,15 +219,16 @@ if 0
         title(sprintf('angle %.2f', ops.grating_angles(n_st)))
     end
 
-    figure(render='painters'); 
+    figure(); % render='painters'
+
     for n_st = 1:numel(ops.grating_angles)
-        subplot(2,5,n_st)
+        sp = subplot(2,5,n_st);
         spectrogram(grating_stim_norm(n_st,:), 1000, 100, 1000, 1/ops.sig_dt, 'yaxis');
-        ax = gca;
-        ax.YScale = 'log';
+        sp.YScale = 'log';
         ylim([2, 90]);
-        ax.YTick = [2.5, 5, 10, 20, 40, 80];
+        sp.YTick = [2.5, 5, 10, 20, 40, 80];
         title(sprintf('angle %.2f', ops.grating_angles(n_st)))
+
         colorbar off;
         axis square;
     end
