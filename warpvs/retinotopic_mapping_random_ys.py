@@ -18,7 +18,7 @@ mon_refresh_rate = 60  # enter your monitors height in Hz
 mon_C2T_cm = mon_height_cm / 2.
 mon_C2A_cm = mon_width_cm / 2.
 mon_center_coordinates = (10., 45.)
-mon_dis = 10.
+mon_dis = 12.
 mon_downsample_rate = 5
 
 
@@ -39,7 +39,7 @@ coordinate = 'degree'
 #%% ============================ DisplaySequence ====================================
 ds_log_dir = r'C:\Users\rylab_901c_slm\Desktop\Yuriy\stim\stim_scripts_outputs\warpvs'
 ds_backupdir = None
-ds_identifier = 'VCmapping'
+ds_identifier = 'VC_mapping'
 ds_display_iter = 1
 ds_mouse_id = 'L_gcamp1'
 ds_user_id = 'Yuriy'
@@ -56,7 +56,7 @@ ds_is_sync_pulse = True
 ds_sync_pulse_NI_dev = 'Dev2'
 ds_sync_pulse_NI_port = 0
 ds_sync_pulse_NI_line = 1
-ds_display_screen = 1
+ds_display_screen = 0
 ds_initial_background_color = 0.
 ds_color_weights = (1., 1., 1.)
 

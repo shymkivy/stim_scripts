@@ -16,7 +16,7 @@ mon_refresh_rate = 60  # enter your monitors height in Hz
 mon_C2T_cm = mon_height_cm / 2.
 mon_C2A_cm = mon_width_cm / 2.
 mon_center_coordinates = (0., 60.)
-mon_dis = 10.
+mon_dis = 12.
 mon_downsample_rate = 5
 # =================================================================================
 
