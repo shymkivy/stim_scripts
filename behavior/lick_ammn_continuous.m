@@ -139,7 +139,7 @@ end
 f_write_daq_out(session, [0,0,0,0], ops.old_daq);% [stim_type, LED, LED_behavior, solenoid] [AO AO DO DO]
 
 % start with some water
-f_write_daq_out(session, [0,0,0,1], ops.old_daq); % write(arduino_port, 3, 'uint8');
+f_write_daq_out(session, [0,0,1,1], ops.old_daq); % write(arduino_port, 3, 'uint8');
 pause(ops.water_dispense_duration_large);
 f_write_daq_out(session, [0,0,0,0], ops.old_daq);
 
